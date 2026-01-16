@@ -1,0 +1,134 @@
+import React, { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import Button from '../components/Button';
+import Input from '../components/Input';
+import Card from '../components/Card';
+
+const Login = () => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const { login, googleLogin, loading } = useAuth();
+    const { t } = useLanguage();
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setError('');
+        try {
+            const user = await login(email, password);
+            if (location.state?.from) {
+                navigate(location.state.from);
+            } else if (user.role === 'admin') {
+                navigate('/admin/dashboard');
+            } else {
+                navigate('/dashboard');
+            }
+        } catch (err) {
+            if (err.message === 'Email not registered') {
+                setError(
+                    <span>
+                        You don't have an account. <Link to="/register" className="font-bold underline">Create one</Link>
+                    </span>
+                );
+            } else if (err.message === 'Incorrect password') {
+                setError('Incorrect password');
+            } else {
+                setError(err.message || 'Failed to login');
+            }
+            console.error(err);
+        }
+    };
+
+    const handleGoogleLogin = async () => {
+        try {
+            await googleLogin();
+            navigate('/dashboard');
+        } catch (error) {
+            setError('Google Login Failed');
+        }
+    };
+
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+            <Card className="max-w-md w-full space-y-8 p-10">
+                <div className="text-center">
+                    <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+                        {t('auth.signin_title')}
+                    </h2>
+                    <p className="mt-2 text-sm text-gray-600">
+                        Or{' '}
+                        <Link to="/register" className="font-medium text-primary hover:text-indigo-500">
+                            {t('auth.create_account')}
+                        </Link>
+                    </p>
+                </div>
+                <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+                    <div className="rounded-md shadow-sm -space-y-px">
+                        <Input
+                            label={t('auth.email_label')}
+                            type="email"
+                            placeholder="you@example.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                        <Input
+                            label={t('auth.password_label')}
+                            type="password"
+                            placeholder="••••••••"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded text-sm">
+                            {error}
+                        </div>
+                    )}
+
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            <input
+                                id="remember-me"
+                                name="remember-me"
+                                type="checkbox"
+                                className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                            />
+                            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                                {t('auth.remember_me')}
+                            </label>
+                        </div>
+
+                        <div className="text-sm">
+                            <a href="#" className="font-medium text-primary hover:text-indigo-500">
+                                {t('auth.forgot_password')}
+                            </a>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <Button type="submit" className="w-full flex justify-center py-3">
+                            {loading ? t('auth.signin_loading') : t('auth.signin_btn')}
+                        </Button>
+                        <button
+                            type="button"
+                            onClick={handleGoogleLogin}
+                            className="w-full flex justify-center py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                        >
+                            <img className="h-5 w-5 mr-2" src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google logo" />
+                            {t('auth.google_continue')}
+                        </button>
+                    </div>
+                </form>
+            </Card>
+        </div>
+    );
+};
+
+export default Login;
