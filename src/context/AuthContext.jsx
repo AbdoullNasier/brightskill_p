@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext();
 
@@ -79,10 +78,6 @@ export const AuthProvider = ({ children }) => {
             };
         } else {
             // STRICT CHECK: Check if user exists in our "database" (localStorage) which we populate on register
-            // We'll also store a simple list of registered emails for easier checking if needed, or scan the specific user key
-            // For now, let's assume we store the "current" user, but in a real app we'd search a list.
-            // To support multiple users in this mock, let's check a 'registered_users' array.
-
             const registeredUsers = JSON.parse(localStorage.getItem('brightskill_registered_users') || '[]');
             const foundUser = registeredUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
 
@@ -129,30 +124,6 @@ export const AuthProvider = ({ children }) => {
 
         // Auto login after register
         localStorage.setItem('brightskill_user', JSON.stringify(userData));
-        setUser(userData);
-        setIsAuthenticated(true);
-        setLoading(false);
-        return userData;
-    };
-
-    const googleLogin = async () => {
-        setLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate Google Popup
-
-        const userData = {
-            id: 'google_' + Math.random().toString(36).substr(2, 9),
-            name: 'Google User',
-            email: 'google_user@gmail.com',
-            role: 'learner',
-            avatar: 'https://ui-avatars.com/api/?name=Google+User&background=DB4437&color=fff' // Google Red
-        };
-
-        // Treat as registration + login
-        localStorage.setItem('brightskill_user', JSON.stringify(userData));
-
-        // Also ensure they are in the "registered" list so they can login normally later if we supported password setting
-        // For now, just session set is enough for the mock flow
-
         setUser(userData);
         setIsAuthenticated(true);
         setLoading(false);
@@ -216,7 +187,6 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         register,
-        googleLogin,
         logout,
         updateUser,
         // Course Data

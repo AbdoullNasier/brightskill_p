@@ -10,7 +10,7 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const { login, googleLogin, loading } = useAuth();
+    const { login, loading } = useAuth();
     const { t } = useLanguage();
     const navigate = useNavigate();
     const location = useLocation();
@@ -42,16 +42,6 @@ const Login = () => {
             console.error(err);
         }
     };
-
-    const handleGoogleLogin = async () => {
-        try {
-            await googleLogin();
-            navigate('/dashboard');
-        } catch (error) {
-            setError('Google Login Failed');
-        }
-    };
-
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
             <Card className="max-w-md w-full space-y-8 p-10">
@@ -116,14 +106,6 @@ const Login = () => {
                         <Button type="submit" className="w-full flex justify-center py-3">
                             {loading ? t('auth.signin_loading') : t('auth.signin_btn')}
                         </Button>
-                        <button
-                            type="button"
-                            onClick={handleGoogleLogin}
-                            className="w-full flex justify-center py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
-                        >
-                            <img className="h-5 w-5 mr-2" src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google logo" />
-                            {t('auth.google_continue')}
-                        </button>
                     </div>
                 </form>
             </Card>

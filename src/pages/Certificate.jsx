@@ -5,6 +5,8 @@ import jsPDF from 'jspdf';
 import { MdDownload, MdArrowBack } from 'react-icons/md';
 import Button from '../components/Button';
 
+import logo from '../assets/images/logo1.png';
+
 const Certificate = () => {
     const location = useLocation();
     const navigate = useNavigate();
@@ -72,6 +74,9 @@ const Certificate = () => {
                 <div className="absolute bottom-4 left-4 w-16 h-16 border-b-4 border-l-4 border-primary"></div>
                 <div className="absolute bottom-4 right-4 w-16 h-16 border-b-4 border-r-4 border-primary"></div>
 
+                <div className="mb-4">
+                    <img src={logo} alt="BrightSkill Logo" className="h-20 object-contain mx-auto" />
+                </div>
                 <div className="mb-8">
                     <h1 className="text-5xl font-bold text-primary mb-2 uppercase tracking-widest">Certificate</h1>
                     <span className="text-xl text-gray-500 tracking-wider">OF COMPLETION</span>
