@@ -1,5 +1,4 @@
-import React from 'react';
-import { skillsData } from '../data/skillsData';
+import React, { useEffect, useMemo, useState } from 'react';
 import Card from '../components/Card';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ProgressBar from '../components/ProgressBar';
@@ -8,80 +7,110 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import Button from '../components/Button';
 
+const iconBySkill = {
+    communication: 'MdChat',
+    leadership: 'MdGroups',
+    'emotional intelligence': 'MdPsychology',
+    'critical thinking': 'MdLightbulb',
+    'time management': 'MdSchedule',
+    adaptability: 'MdTransform',
+};
+
+const colorByDifficulty = {
+    beginner: 'bg-blue-100 text-blue-600',
+    intermediate: 'bg-yellow-100 text-yellow-700',
+    advanced: 'bg-rose-100 text-rose-700',
+};
+
 const Skills = () => {
     const navigate = useNavigate();
-    const { isAuthenticated, user, activeCourseId, userProgress, enrollInCourse, completedCourses } = useAuth();
-    const { t } = useLanguage();
     const location = useLocation();
+    const { isAuthenticated, user, activeCourseId, userProgress, enrollInCourse, completedCourses, apiRequest } = useAuth();
+    const { t } = useLanguage();
 
-    const handleStartLearning = (skill, isCompleted, isActive, isLocked) => {
+    const [courses, setCourses] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const displayName = user?.first_name || user?.username || 'User';
+
+    useEffect(() => {
+        const loadCourses = async () => {
+            try {
+                const response = await apiRequest('/courses/courses/');
+                if (!response.ok) {
+                    setCourses([]);
+                    return;
+                }
+                const data = await response.json();
+                setCourses(Array.isArray(data) ? data : []);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadCourses();
+    }, []);
+
+    const handleStartLearning = async (course, isCompleted, isActive, isLocked) => {
         if (!isAuthenticated) {
             navigate('/login', { state: { from: location.pathname } });
             return;
         }
 
         if (isLocked) {
-            // Should be disabled but just in case
-            alert("Please complete your current active course first.");
+            alert('Please complete your current active course first.');
             return;
         }
 
         if (isCompleted) {
             navigate('/certificate', {
                 state: {
-                    courseName: skill.title,
-                    studentName: user?.name || "User",
-                    date: new Date().toLocaleDateString()
-                }
+                    courseName: course.title,
+                    studentName: displayName,
+                    date: new Date().toLocaleDateString(),
+                },
             });
             return;
         }
 
         if (!isActive) {
-            // New enrollment
-            try {
-                enrollInCourse(skill.id);
-            } catch (error) {
-                alert(error.message);
-                return;
-            }
+            await enrollInCourse(course.id);
         }
 
-        // Navigate to lesson for both new enrollment and continuing active course
-        navigate(`/lesson/${skill.id}`);
+        navigate(`/lesson/${course.id}`);
     };
+
+    if (loading) {
+        return <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">Loading courses...</div>;
+    }
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <h1 className="text-3xl font-bold text-gray-900 mb-8">{t('skills.explore')}</h1>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {skillsData.map((skill, index) => {
-                    const IconComponent = Icons[skill.icon] || Icons.MdWork;
-
-                    // Determine status based on Context
-                    const currentProgress = userProgress[skill.id] || 0;
-                    const isCompleted = completedCourses.includes(skill.id) || currentProgress >= 100;
-                    const isActive = activeCourseId === skill.id;
+                {courses.map((course, index) => {
+                    const iconKey = iconBySkill[(course.skill_name || '').toLowerCase()] || 'MdWork';
+                    const IconComponent = Icons[iconKey] || Icons.MdWork;
+                    const currentProgress = userProgress[course.id] || 0;
+                    const isCompleted = completedCourses.includes(course.id) || currentProgress >= 100;
+                    const isActive = activeCourseId === course.id;
                     const isLocked = isAuthenticated && activeCourseId && !isActive && !isCompleted;
 
                     return (
-                        <Card key={skill.id} delay={index * 0.05} className={`flex flex-col h-full hover:shadow-lg transition-shadow duration-300 ${isLocked ? 'opacity-75' : ''}`}>
+                        <Card key={course.id} delay={index * 0.05} className={`flex flex-col h-full hover:shadow-lg transition-shadow duration-300 ${isLocked ? 'opacity-75' : ''}`}>
                             <div className="flex items-center mb-4">
-                                <div className={`p-3 rounded-full ${skill.color} mr-4`}>
+                                <div className={`p-3 rounded-full ${colorByDifficulty[course.difficulty] || 'bg-indigo-100 text-indigo-600'} mr-4`}>
                                     <IconComponent size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-lg">{skill.title}</h3>
-                                    <span className="text-xs font-semibold px-2 py-1 bg-gray-100 rounded text-gray-600">
-                                        {skill.level}
+                                    <h3 className="font-bold text-lg">{course.title}</h3>
+                                    <span className="text-xs font-semibold px-2 py-1 bg-gray-100 rounded text-gray-600 capitalize">
+                                        {course.difficulty}
                                     </span>
                                 </div>
                             </div>
 
-                            <p className="text-gray-600 text-sm mb-6 flex-grow">
-                                {skill.description}
-                            </p>
+                            <p className="text-gray-600 text-sm mb-6 flex-grow">{course.description}</p>
 
                             <div className="mt-auto">
                                 {isAuthenticated && (
@@ -96,29 +125,21 @@ const Skills = () => {
 
                                 <div className="mt-4">
                                     <Button
-                                        onClick={() => handleStartLearning(skill, isCompleted, isActive, isLocked)}
+                                        onClick={() => handleStartLearning(course, isCompleted, isActive, isLocked)}
                                         className="w-full"
-                                        variant={isCompleted ? "primary" : (isActive ? "primary" : "outline")}
+                                        variant={isCompleted ? 'primary' : isActive ? 'primary' : 'outline'}
                                         disabled={isLocked}
                                     >
-                                        {!isAuthenticated ? t('skills.start_learning') :
-                                            (isCompleted ? "Completed, Get Certificate" :
-                                                (isActive ? "Continue Learning" :
-                                                    (isLocked ? "Complete Active Course First" : "Start Learning")
-                                                )
-                                            )
-                                        }
+                                        {!isAuthenticated
+                                            ? t('skills.start_learning')
+                                            : isCompleted
+                                                ? 'Completed, Get Certificate'
+                                                : isActive
+                                                    ? 'Continue Learning'
+                                                    : isLocked
+                                                        ? 'Complete Active Course First'
+                                                        : 'Start Learning'}
                                     </Button>
-                                    {isCompleted && (
-                                        <p className="text-xs text-center text-green-600 mt-2 font-semibold">
-                                            Course Completed!
-                                        </p>
-                                    )}
-                                    {!isAuthenticated && (
-                                        <p className="text-xs text-center text-gray-500 mt-2">
-                                            {t('skills.login_redirect')}
-                                        </p>
-                                    )}
                                 </div>
                             </div>
                         </Card>

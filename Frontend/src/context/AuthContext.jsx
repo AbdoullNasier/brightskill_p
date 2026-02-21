@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 const AuthContext = createContext();
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 export const useAuth = () => useContext(AuthContext);
 
@@ -8,177 +10,258 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [tokens, setTokens] = useState({ access: null, refresh: null });
 
-    // Course Management State
     const [activeCourseId, setActiveCourseId] = useState(null);
-    const [userProgress, setUserProgress] = useState({}); // { skillId: progress }
-    const [completedCourses, setCompletedCourses] = useState([]); // [skillId, skillId]
+    const [userProgress, setUserProgress] = useState({});
+    const [completedCourses, setCompletedCourses] = useState([]);
 
-    useEffect(() => {
-        // Load course data
-        const storedCourses = JSON.parse(localStorage.getItem('brightskill_courses') || '{}');
-        if (storedCourses) {
-            setActiveCourseId(storedCourses.activeCourseId || null);
-            setUserProgress(storedCourses.userProgress || {});
-            setCompletedCourses(storedCourses.completedCourses || []);
-        }
-    }, []);
-
-    // Save course data whenever it changes
-    useEffect(() => {
-        const courseData = {
-            activeCourseId,
-            userProgress,
-            completedCourses
+    const authHeaders = useMemo(() => {
+        if (!tokens.access) return { 'Content-Type': 'application/json' };
+        return {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${tokens.access}`,
         };
-        localStorage.setItem('brightskill_courses', JSON.stringify(courseData));
-    }, [activeCourseId, userProgress, completedCourses]);
+    }, [tokens.access]);
 
     useEffect(() => {
-        // Check local storage for existing session
-        const storedUser = localStorage.getItem('brightskill_user');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-            setIsAuthenticated(true);
-        }
-        setLoading(false);
+        const initializeAuth = () => {
+            try {
+                const storedTokens = localStorage.getItem('brightskill_tokens');
+                const storedUser = localStorage.getItem('brightskill_user');
+
+                if (storedTokens && storedUser && storedTokens !== 'undefined' && storedUser !== 'undefined') {
+                    const parsedTokens = JSON.parse(storedTokens);
+                    const parsedUser = JSON.parse(storedUser);
+                    setTokens(parsedTokens);
+                    setUser(parsedUser);
+                    setIsAuthenticated(true);
+                }
+            } catch (error) {
+                localStorage.removeItem('brightskill_tokens');
+                localStorage.removeItem('brightskill_user');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        initializeAuth();
     }, []);
 
-    const login = async (email, password) => {
-        setLoading(true);
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        let userData;
-
-        // Mock Admin Logic
-        if (email.toLowerCase() === 'super@brightskill.com') {
-            userData = {
-                id: 'super_admin_001',
-                name: 'Super Admin',
-                email: email,
-                role: 'super_admin',
-                avatar: 'https://ui-avatars.com/api/?name=Super+Admin&background=000&color=fff'
-            };
-        } else if (email.toLowerCase() === 'tutor@brightskill.com') {
-            userData = {
-                id: 'tutor_001',
-                name: 'Lead Tutor',
-                email: email,
-                role: 'tutor',
-                avatar: 'https://ui-avatars.com/api/?name=Lead+Tutor&background=5D3&color=fff'
-            };
-        } else if (email.toLowerCase() === 'admin@brightskill.com') {
-            userData = {
-                id: 'admin_001',
-                name: 'Admin User',
-                email: email,
-                role: 'admin',
-                avatar: 'https://ui-avatars.com/api/?name=Admin+User&background=0D8ABC&color=fff'
-            };
-        } else {
-            // STRICT CHECK: Check if user exists in our "database" (localStorage) which we populate on register
-            const registeredUsers = JSON.parse(localStorage.getItem('brightskill_registered_users') || '[]');
-            const foundUser = registeredUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
-
-            if (!foundUser) {
-                setLoading(false);
-                throw new Error("Email not registered");
+    const refreshAccessToken = async () => {
+        try {
+            const refresh = tokens.refresh;
+            if (!refresh) {
+                logout();
+                return null;
             }
 
-            if (foundUser.password !== password) {
-                setLoading(false);
-                throw new Error("Incorrect password");
+            const response = await fetch(`${API_BASE_URL}/auth/token/refresh/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refresh }),
+            });
+
+            if (!response.ok) {
+                logout();
+                return null;
             }
 
-            userData = foundUser;
+            const data = await response.json();
+            const nextTokens = { ...tokens, access: data.access };
+            setTokens(nextTokens);
+            localStorage.setItem('brightskill_tokens', JSON.stringify(nextTokens));
+            return data.access;
+        } catch (error) {
+            logout();
+            return null;
         }
-
-        // Store current session user
-        localStorage.setItem('brightskill_user', JSON.stringify(userData));
-        setUser(userData);
-        setIsAuthenticated(true);
-        setLoading(false);
-        return userData;
     };
 
-    const register = async (name, username, email, password) => {
-        setLoading(true);
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        const userData = {
-            id: 'user_' + Math.random().toString(36).substr(2, 9),
-            name: name,
-            username: username,
-            email: email,
-            password: password, // Storing password for mock auth
-            role: 'learner',
-            avatar: `https://ui-avatars.com/api/?name=${username || name}&background=random`
+    const apiRequest = async (url, options = {}) => {
+        const exec = async (accessToken) => {
+            const headers = {
+                'Content-Type': 'application/json',
+                ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+                ...(options.headers || {}),
+            };
+            return fetch(`${API_BASE_URL}${url}`, { ...options, headers });
         };
 
-        // Add to "database" of registered users
-        const registeredUsers = JSON.parse(localStorage.getItem('brightskill_registered_users') || '[]');
-        registeredUsers.push(userData);
-        localStorage.setItem('brightskill_registered_users', JSON.stringify(registeredUsers));
+        let response = await exec(tokens.access);
 
-        // Auto login after register
-        localStorage.setItem('brightskill_user', JSON.stringify(userData));
-        setUser(userData);
-        setIsAuthenticated(true);
-        setLoading(false);
-        return userData;
+        if (response.status === 401 && tokens.refresh) {
+            const refreshedAccess = await refreshAccessToken();
+            if (refreshedAccess) {
+                response = await exec(refreshedAccess);
+            }
+        }
+
+        return response;
+    };
+
+    const fetchProgressSnapshot = async () => {
+        if (!isAuthenticated) return;
+
+        const response = await apiRequest('/progress/my-progress/');
+        if (!response.ok) {
+            return;
+        }
+
+        const rows = await response.json();
+        const progressMap = {};
+        const completed = [];
+        let active = null;
+
+        rows.forEach((row) => {
+            const courseId = row.course;
+            const percent = Number(row.completion_percentage || 0);
+            progressMap[courseId] = percent;
+            if (percent >= 100) {
+                completed.push(courseId);
+            }
+        });
+
+        const firstActive = rows.find((row) => Number(row.completion_percentage || 0) < 100);
+        if (firstActive) {
+            active = firstActive.course;
+        }
+
+        setUserProgress(progressMap);
+        setCompletedCourses(completed);
+        setActiveCourseId(active);
+    };
+
+    useEffect(() => {
+        fetchProgressSnapshot();
+    }, [isAuthenticated, tokens.access]);
+
+    const login = async (username, password) => {
+        setLoading(true);
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/login/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Login failed');
+            }
+
+            const data = await response.json();
+            const nextTokens = { access: data.access, refresh: data.refresh };
+            setTokens(nextTokens);
+            setUser(data.user);
+            setIsAuthenticated(true);
+            localStorage.setItem('brightskill_tokens', JSON.stringify(nextTokens));
+            localStorage.setItem('brightskill_user', JSON.stringify(data.user));
+            await fetchProgressSnapshot();
+            return data.user;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const register = async (name, username, email, password, confirmPassword) => {
+        setLoading(true);
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/register/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    first_name: name,
+                    username,
+                    email,
+                    password,
+                    password2: confirmPassword,
+                }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                const errorMessage = error.detail || Object.values(error)[0]?.[0] || 'Registration failed';
+                throw new Error(errorMessage);
+            }
+
+            const data = await response.json();
+            const nextTokens = { access: data.access, refresh: data.refresh };
+            setTokens(nextTokens);
+            setUser(data.user);
+            setIsAuthenticated(true);
+            localStorage.setItem('brightskill_tokens', JSON.stringify(nextTokens));
+            localStorage.setItem('brightskill_user', JSON.stringify(data.user));
+            await fetchProgressSnapshot();
+            return data.user;
+        } finally {
+            setLoading(false);
+        }
     };
 
     const logout = () => {
+        localStorage.removeItem('brightskill_tokens');
         localStorage.removeItem('brightskill_user');
+        setTokens({ access: null, refresh: null });
         setUser(null);
         setIsAuthenticated(false);
-    };
-
-    const updateUser = (updatedData) => {
-        const newUser = { ...user, ...updatedData };
-        setUser(newUser);
-        localStorage.setItem('brightskill_user', JSON.stringify(newUser));
-
-        // Also update the registered users list if needed (for persistence across mock sessions)
-        const registeredUsers = JSON.parse(localStorage.getItem('brightskill_registered_users') || '[]');
-        const updatedRegistered = registeredUsers.map(u => u.email === user.email ? { ...u, ...updatedData } : u);
-        localStorage.setItem('brightskill_registered_users', JSON.stringify(updatedRegistered));
-
-        return newUser;
-    };
-
-    // --- Course Management Functions ---
-
-    const enrollInCourse = (skillId) => {
-        if (activeCourseId && activeCourseId !== skillId) {
-            throw new Error("You are already enrolled in a course. Please complete it first.");
-        }
-        setActiveCourseId(skillId);
-        // Initialize progress if not exists
-        if (!userProgress[skillId]) {
-            setUserProgress(prev => ({ ...prev, [skillId]: 0 }));
-        }
-    };
-
-    const updateCourseProgress = (skillId, progress) => {
-        setUserProgress(prev => ({ ...prev, [skillId]: progress }));
-
-        // Auto-complete if 100%
-        if (progress >= 100) {
-            completeCourse(skillId);
-        }
-    };
-
-    const completeCourse = (skillId) => {
-        if (!completedCourses.includes(skillId)) {
-            setCompletedCourses(prev => [...prev, skillId]);
-        }
-        // Release the lock
         setActiveCourseId(null);
-        // Ensure progress is maxed
-        setUserProgress(prev => ({ ...prev, [skillId]: 100 }));
+        setUserProgress({});
+        setCompletedCourses([]);
+    };
+
+    const updateUser = async (updatedData) => {
+        const response = await apiRequest('/auth/profile/', {
+            method: 'PATCH',
+            body: JSON.stringify(updatedData),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update profile');
+        }
+
+        const updatedUser = await response.json();
+        setUser(updatedUser);
+        localStorage.setItem('brightskill_user', JSON.stringify(updatedUser));
+        return updatedUser;
+    };
+
+    const enrollInCourse = async (courseId) => {
+        const response = await apiRequest('/progress/enroll/', {
+            method: 'POST',
+            body: JSON.stringify({ course_id: courseId }),
+        });
+
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.detail || 'Enrollment failed');
+        }
+
+        await fetchProgressSnapshot();
+        return response.json();
+    };
+
+    const updateCourseProgress = async (courseId, lessonId) => {
+        if (!lessonId) {
+            throw new Error('lessonId is required to update progress');
+        }
+
+        const response = await apiRequest('/progress/complete-lesson/', {
+            method: 'POST',
+            body: JSON.stringify({ course_id: courseId, lesson_id: lessonId }),
+        });
+
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.detail || 'Failed to update lesson progress');
+        }
+
+        await fetchProgressSnapshot();
+        return response.json();
+    };
+
+    const completeCourse = async () => {
+        await fetchProgressSnapshot();
     };
 
     const value = {
@@ -189,18 +272,16 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         updateUser,
-        // Course Data
+        authHeaders,
+        apiRequest,
         activeCourseId,
         userProgress,
         completedCourses,
         enrollInCourse,
         updateCourseProgress,
-        completeCourse
+        completeCourse,
+        refreshProgress: fetchProgressSnapshot,
     };
 
-    return (
-        <AuthContext.Provider value={value}>
-            {!loading && children}
-        </AuthContext.Provider>
-    );
+    return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
 };

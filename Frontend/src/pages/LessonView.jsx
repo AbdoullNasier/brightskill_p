@@ -1,34 +1,64 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
 import Card from '../components/Card';
-import { MdCheckCircle, MdArrowBack, MdQuiz } from 'react-icons/md';
+import { MdArrowBack, MdQuiz } from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
 
 const LessonView = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { updateCourseProgress } = useAuth();
+    const courseId = Number(id);
+    const { apiRequest, updateCourseProgress } = useAuth();
 
-    // Mock Data based on ID
-    const lesson = {
-        title: 'Understanding Active Listening',
-        description: 'Active listening is the art of listening with meaning. It requires full attention and engagement.',
-        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Placeholder
-        content: `
-            <h3>Key Concepts</h3>
-            <p>1. Pay Attention: Give the speaker your undivided attention.</p>
-            <p>2. Show That You're Listening: Use body language and gestures.</p>
-            <p>3. Provide Feedback: Reflect on what has been said.</p>
-            <p>4. Defer Judgment: Don't interrupt.</p>
-            <p>5. Respond Appropriately: Be candid, open, and honest.</p>
-        `
+    const [course, setCourse] = useState(null);
+    const [lesson, setLesson] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const loadLesson = async () => {
+            try {
+                const [courseRes, lessonRes] = await Promise.all([
+                    apiRequest(`/courses/courses/${courseId}/`),
+                    apiRequest(`/courses/lessons/?course=${courseId}`),
+                ]);
+
+                if (courseRes.ok) {
+                    setCourse(await courseRes.json());
+                }
+
+                if (lessonRes.ok) {
+                    const lessons = await lessonRes.json();
+                    if (Array.isArray(lessons) && lessons.length > 0) {
+                        setLesson(lessons[0]);
+                    }
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadLesson();
+    }, [courseId]);
+
+    const handleTakeQuiz = async () => {
+        if (lesson?.id) {
+            try {
+                await updateCourseProgress(courseId, lesson.id);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        navigate(`/quiz/${courseId}`);
     };
 
-    const handleTakeQuiz = () => {
-        // Navigate to quiz without marking as complete
-        navigate(`/quiz/${id}`);
-    };
+    if (loading) {
+        return <div className="max-w-4xl mx-auto py-8 px-4">Loading lesson...</div>;
+    }
+
+    if (!lesson) {
+        return <div className="max-w-4xl mx-auto py-8 px-4">No lessons found for this course yet.</div>;
+    }
 
     return (
         <div className="max-w-4xl mx-auto py-8 px-4">
@@ -37,36 +67,20 @@ const LessonView = () => {
             </Button>
 
             <Card className="p-0 overflow-hidden mb-6">
-                <div className="aspect-w-16 aspect-h-9 bg-black">
-                    <iframe
-                        width="100%"
-                        height="500"
-                        src={lesson.videoUrl}
-                        title="YouTube video player"
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        className="w-full h-[500px]"
-                    ></iframe>
-                </div>
                 <div className="p-8">
                     <h1 className="text-3xl font-bold text-gray-900 mb-4">{lesson.title}</h1>
-                    <p className="text-gray-600 mb-6">{lesson.description}</p>
+                    <p className="text-gray-600 mb-2">Course: {course?.title}</p>
+                    <p className="text-gray-600 mb-6">Lesson order: {lesson.order}</p>
 
-                    <div
-                        className="prose max-w-none text-gray-800"
-                        dangerouslySetInnerHTML={{ __html: lesson.content }}
-                    />
+                    <div className="prose max-w-none text-gray-800 whitespace-pre-wrap">{lesson.content}</div>
                 </div>
             </Card>
 
             <div className="flex justify-end">
                 <Button onClick={handleTakeQuiz} className="flex items-center text-lg px-8 py-3">
-                    <MdQuiz className="mr-2" /> Take Practice Quiz
+                    <MdQuiz className="mr-2" /> Mark Lesson Complete & Take Quiz
                 </Button>
             </div>
-
-
         </div>
     );
 };

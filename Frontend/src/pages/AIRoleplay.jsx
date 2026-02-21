@@ -1,31 +1,77 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MdSend, MdMic, MdSmartToy, MdPerson } from 'react-icons/md';
 import Button from '../components/Button';
-import Input from '../components/Input';
 import { useGamification } from '../context/GamificationContext';
+import { useLanguage } from '../context/LanguageContext';
+import { getAI, postAI } from '../utils/aiClient';
 
 const AIRolePlay = () => {
     const { addXp } = useGamification();
+    const { language } = useLanguage();
     const chatContainerRef = useRef(null);
+    const inputRef = useRef(null);
 
     // Conversation State
     const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState('');
     const [isTyping, setIsTyping] = useState(false);
+    const [sessionId, setSessionId] = useState(null);
 
-    // Initial Greeting
+    const autoGrowTextarea = () => {
+        if (!inputRef.current) return;
+        inputRef.current.style.height = 'auto';
+        inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 160)}px`;
+    };
+
     useEffect(() => {
-        if (messages.length === 0) {
+        autoGrowTextarea();
+    }, [inputText]);
+
+    // Load last session for reference
+    useEffect(() => {
+        if (messages.length !== 0) return;
+
+        const loadSessionOrGreeting = async () => {
             setIsTyping(true);
-            setTimeout(() => {
+            try {
+                const history = await getAI('/roleplay/history/');
+                if (Array.isArray(history) && history.length > 0) {
+                    const latest = history[0];
+                    setSessionId(latest.id);
+                    const mapped = (latest.messages || []).map((msg) => ({
+                        id: msg.id,
+                        sender: msg.role === 'ai' ? 'ai' : 'user',
+                        text: msg.content,
+                    }));
+                    if (mapped.length > 0) {
+                        setMessages(mapped);
+                    } else {
+                        setMessages([{
+                            id: 1,
+                            sender: 'ai',
+                            text: 'Share a workplace soft-skill scenario and I will role-play it with you.',
+                        }]);
+                    }
+                } else {
+                    setMessages([{
+                        id: 1,
+                        sender: 'ai',
+                        text: 'Share a workplace soft-skill scenario and I will role-play it with you.',
+                    }]);
+                }
+            } catch (err) {
                 setMessages([{
                     id: 1,
                     sender: 'ai',
-                    text: "Hello! I'm your AI Assistant Coach. \n\nI'm here to discuss your career goals, help you understand soft skills, or answer questions about BrightSkill. What's on your mind today?"
+                    text: "AI roleplay is unavailable right now. Please try again shortly.",
                 }]);
+                console.error(err);
+            } finally {
                 setIsTyping(false);
-            }, 500);
-        }
+            }
+        };
+
+        loadSessionOrGreeting();
     }, [messages.length]);
 
     // Auto-scroll logic
@@ -35,39 +81,38 @@ const AIRolePlay = () => {
         }
     }, [messages, isTyping]);
 
-    const handleSend = () => {
+    const handleSend = async () => {
         if (!inputText.trim()) return;
 
+        const submittedText = inputText;
         const userMsg = { id: messages.length + 1, sender: 'user', text: inputText };
         setMessages(prev => [...prev, userMsg]);
         setInputText('');
         setIsTyping(true);
 
-        // Simple Mock AI Logic
-        setTimeout(() => {
-            const lowerInput = inputText.toLowerCase();
-            let responseText = "That's an interesting perspective. Tell me more about how that aligns with your long-term goals.";
-
-            if (lowerInput.includes('communication') || lowerInput.includes('speak') || lowerInput.includes('listen')) {
-                responseText = "Communication is the bedrock of career success. Are you looking to improve your public speaking or your active listening skills?";
-            } else if (lowerInput.includes('leader') || lowerInput.includes('manage')) {
-                responseText = "Leadership isn't just about managing others; it's about influence. We have great modules on 'Empathy in Leadership' if you're interested.";
-            } else if (lowerInput.includes('stress') || lowerInput.includes('anural') || lowerInput.includes('confident')) {
-                responseText = "Confidence comes from preparation and mindset. Have you tried the 'Stress Management' exercises in your dashboard?";
-            } else if (lowerInput.includes('goal') || lowerInput.includes('plan')) {
-                responseText = "Setting clear goals is the first step. I can help you break down your 'Communication' goal into smaller, actionable steps.";
-            } else if (lowerInput.includes('hello') || lowerInput.includes('hi')) {
-                responseText = "Hi there! Ready to work on your professional growth today?";
-            }
-
-            const aiMsg = { id: messages.length + 2, sender: 'ai', text: responseText };
+        try {
+            const data = await postAI('/roleplay/', {
+                prompt: submittedText,
+                session_id: sessionId || undefined,
+                language: language === 'HA' ? 'hausa' : 'english',
+            });
+            const aiMsg = { id: messages.length + 2, sender: 'ai', text: data.reply };
             setMessages(prev => [...prev, aiMsg]);
+            if (data.session_id) {
+                setSessionId(data.session_id);
+            }
             setIsTyping(false);
 
-            // Random chance for XP
-            if (Math.random() > 0.7) addXp(10);
-
-        }, 1200);
+            if (data.xp_awarded) addXp(data.xp_awarded);
+        } catch (err) {
+            setMessages(prev => [...prev, {
+                id: messages.length + 2,
+                sender: 'ai',
+                text: err?.message || "I could not reach the AI service. Please try again.",
+            }]);
+            setIsTyping(false);
+            console.error(err);
+        }
     };
 
     return (
@@ -105,7 +150,7 @@ const AIRolePlay = () => {
                                         : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none shadow-sm'
                                         }`}
                                 >
-                                    <p className="text-sm md:text-base leading-relaxed">{msg.text}</p>
+                                    <p className="text-sm md:text-base leading-relaxed break-words">{msg.text}</p>
                                 </div>
                             </div>
                         </div>
@@ -128,17 +173,23 @@ const AIRolePlay = () => {
 
                 {/* Input Area */}
                 <div className="p-4 bg-white border-t border-gray-100">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-end space-x-2">
                         <button className="p-2 text-gray-400 hover:text-primary rounded-full hover:bg-gray-100 transition-colors">
                             <MdMic size={24} />
                         </button>
-                        <input
-                            type="text"
+                        <textarea
+                            ref={inputRef}
                             value={inputText}
                             onChange={(e) => setInputText(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSend();
+                                }
+                            }}
                             placeholder="Ask me anything..."
-                            className="flex-1 p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                            rows={1}
+                            className="flex-1 p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none max-h-40 overflow-y-auto leading-relaxed"
                         />
                         <Button
                             onClick={handleSend}
@@ -156,3 +207,4 @@ const AIRolePlay = () => {
 
 
 export default AIRolePlay;
+

@@ -24,6 +24,7 @@ import ContentManagement from "./pages/admin/ContentManagement";
 import Analytics from "./pages/admin/Analytics";
 import SuperAdminDashboard from "./pages/admin/SuperAdminDashboard";
 import TutorDashboard from "./pages/admin/TutorDashboard";
+import UserManagement from "./pages/admin/UserManagement";
 
 import EditProfile from "./pages/EditProfile";
 import Badges from "./pages/Badges";
@@ -59,7 +60,7 @@ function App() {
         </Route>
 
         {/* Learner Protected Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['learner']} />}>
+        <Route element={<ProtectedRoute allowedRoles={['learner', 'admin', 'super_admin', 'tutor']} />}>
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/certificate" element={<Certificate />} />
@@ -75,11 +76,18 @@ function App() {
         </Route>
 
         {/* Admin Protected Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+        <Route element={<ProtectedRoute allowedRoles={['admin', 'super_admin']} />}>
           <Route element={<AdminLayout />}>
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/content" element={<ContentManagement />} />
+            <Route path="/admin/users" element={<UserManagement />} />
             <Route path="/admin/analytics" element={<Analytics />} />
+          </Route>
+        </Route>
+
+        {/* Shared Admin/Tutor Content Route */}
+        <Route element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'tutor']} />}>
+          <Route element={<AdminLayout />}>
+            <Route path="/admin/content" element={<ContentManagement />} />
           </Route>
         </Route>
 

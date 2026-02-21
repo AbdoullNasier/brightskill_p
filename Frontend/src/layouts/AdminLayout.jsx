@@ -1,11 +1,11 @@
 import React from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { MdDashboard, MdLibraryBooks, MdAnalytics, MdLogout, MdSettings } from 'react-icons/md';
+import { MdDashboard, MdLibraryBooks, MdAnalytics, MdLogout, MdPeople, MdSchool } from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/Images/logo1.png';
 
 const AdminLayout = () => {
-    const { logout } = useAuth();
+    const { logout, user } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -14,11 +14,17 @@ const AdminLayout = () => {
         navigate('/login');
     };
 
-    const sidebarLinks = [
+    const adminSidebarLinks = [
         { name: 'Dashboard', path: '/admin/dashboard', icon: <MdDashboard /> },
+        { name: 'Users', path: '/admin/users', icon: <MdPeople /> },
         { name: 'Content Management', path: '/admin/content', icon: <MdLibraryBooks /> },
         { name: 'Analytics', path: '/admin/analytics', icon: <MdAnalytics /> },
     ];
+    const tutorSidebarLinks = [
+        { name: 'Tutor Dashboard', path: '/admin/tutor-dashboard', icon: <MdSchool /> },
+        { name: 'Content Management', path: '/admin/content', icon: <MdLibraryBooks /> },
+    ];
+    const sidebarLinks = user?.role === 'tutor' ? tutorSidebarLinks : adminSidebarLinks;
 
     return (
         <div className="flex h-screen bg-gray-100">
@@ -26,7 +32,7 @@ const AdminLayout = () => {
             <div className="w-64 bg-white shadow-lg flex flex-col">
                 <div className="p-4 border-b flex items-center justify-center">
                     <img src={logo} alt="BrightSkill" className="h-10" />
-                    <span className="ml-2 font-bold text-gray-700">Admin</span>
+                    <span className="ml-2 font-bold text-gray-700">{user?.role === 'tutor' ? 'Tutor' : 'Admin'}</span>
                 </div>
 
                 <nav className="flex-1 overflow-y-auto py-4">

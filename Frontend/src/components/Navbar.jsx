@@ -33,15 +33,21 @@ const Navbar = () => {
 
     const adminLinks = [
         { name: 'Dashboard', path: '/admin/dashboard' },
+        { name: 'Users', path: '/admin/users' },
         { name: 'Content', path: '/admin/content' },
         { name: 'Analytics', path: '/admin/analytics' },
+    ];
+    const tutorLinks = [
+        { name: 'Tutor Dashboard', path: '/admin/tutor-dashboard' },
     ];
 
     let navLinks = [];
     if (!isAuthenticated) {
         navLinks = publicLinks;
-    } else if (user?.role === 'admin') {
+    } else if (['admin', 'super_admin'].includes(user?.role)) {
         navLinks = adminLinks;
+    } else if (user?.role === 'tutor') {
+        navLinks = tutorLinks;
     } else {
         navLinks = learnerLinks;
     }
@@ -65,7 +71,7 @@ const Navbar = () => {
         return (
             <div className="flex items-center space-x-4">
                 <div className="hidden md:flex flex-col items-end mr-2">
-                    <span className="text-sm font-bold text-gray-700">{user?.name} <span className="text-gray-500 font-normal">({user?.username})</span></span>
+                    <span className="text-sm font-bold text-gray-700">{user?.first_name || user?.username} <span className="text-gray-500 font-normal">({user?.username})</span></span>
                     {user?.role === 'learner' && <span className="text-xs text-primary">Lvl {level}</span>}
                 </div>
                 <img
@@ -83,8 +89,18 @@ const Navbar = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                     {/* Logo */}
-                    {/* Logo */}
-                    <Link to={isAuthenticated ? (user?.role === 'admin' ? '/admin/dashboard' : '/dashboard') : '/'} className="flex items-center">
+                    <Link
+                        to={
+                            isAuthenticated
+                                ? (['admin', 'super_admin'].includes(user?.role)
+                                    ? '/admin/dashboard'
+                                    : user?.role === 'tutor'
+                                        ? '/admin/tutor-dashboard'
+                                        : '/dashboard')
+                                : '/'
+                        }
+                        className="flex items-center"
+                    >
                         <img src={logo} alt="BrightSkill Logo" className="h-12 w-auto mr-2" />
                     </Link>
 
@@ -147,7 +163,7 @@ const Navbar = () => {
                                         className="h-10 w-10 rounded-full border border-gray-200 mr-3"
                                     />
                                     <div>
-                                        <p className="font-bold text-gray-800">{user?.name}</p>
+                                        <p className="font-bold text-gray-800">{user?.first_name || user?.username}</p>
                                         <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
                                     </div>
                                 </div>

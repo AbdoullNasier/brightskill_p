@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -12,8 +12,9 @@ const Register = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
-    const { register, loading } = useAuth();
+    const { register, loading, isAuthenticated, user } = useAuth();
     const { t } = useLanguage();
     const navigate = useNavigate();
     const location = useLocation();
@@ -47,16 +48,29 @@ const Register = () => {
         }
 
         try {
-            await register(name, username, email, password);
+            await register(name, username, email, password, confirmPassword);
             if (location.state?.from) {
                 navigate(location.state.from);
             } else {
                 navigate('/dashboard');
             }
         } catch (err) {
-            setError('Failed to create an account');
+            setError(err.message || 'Failed to create an account');
+            console.error('Registration error:', err);
         }
     };
+
+    useEffect(() => {
+        if (!isAuthenticated || !user) return;
+
+        if (['admin', 'super_admin'].includes(user.role)) {
+            navigate('/admin/dashboard', { replace: true });
+        } else if (user.role === 'tutor') {
+            navigate('/admin/tutor-dashboard', { replace: true });
+        } else {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [isAuthenticated, user, navigate]);
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -100,7 +114,7 @@ const Register = () => {
                         />
                         <Input
                             label={t('auth.password_label')}
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
@@ -109,12 +123,31 @@ const Register = () => {
                         />
                         <Input
                             label={t('auth.confirm_password')}
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             placeholder="••••••••"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             required
                         />
+
+                        <div className='flex items-center'>
+                            <input
+                                name="show-password"
+                                id="show-password"
+                                type="checkbox"
+                                checked={showPassword}
+                                onChange={() => setShowPassword(!showPassword)}
+                                className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                            />
+                            <label
+                                htmlFor="show-password"
+                                className="ml-2 block text-sm text-gray-900"
+                            >
+                                Show Password
+                            </label>
+                        </div>
+
+                        
                     </div>
 
                     {error && (

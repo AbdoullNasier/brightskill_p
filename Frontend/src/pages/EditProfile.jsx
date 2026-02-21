@@ -14,11 +14,13 @@ const EditProfile = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [avatar, setAvatar] = useState('');
+    const [lastName, setLastName] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         if (user) {
-            setName(user.name || '');
+            setName(user.first_name || '');
+            setLastName(user.last_name || '');
             setEmail(user.email || '');
             setAvatar(user.avatar || '');
         }
@@ -29,7 +31,7 @@ const EditProfile = () => {
         setIsSaving(true);
 
         // Use context function to update global state and local storage
-        await updateUser({ name, avatar });
+        await updateUser({ first_name: name, last_name: lastName, avatar });
 
         // Short delay for UX
         setTimeout(() => {
@@ -80,9 +82,15 @@ const EditProfile = () => {
                     </div>
 
                     <Input
-                        label={t('auth.fullname_label')}
+                        label="First Name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
+                    />
+
+                    <Input
+                        label="Last Name"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
                     />
 
                     <Input

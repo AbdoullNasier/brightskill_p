@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { postAI } from '../utils/aiClient';
 
 const AIAssistant = () => {
     const { isAuthenticated, user } = useAuth();
+    const { language } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
@@ -11,6 +14,7 @@ const AIAssistant = () => {
     const location = useLocation();
     const messagesEndRef = useRef(null);
     const excludedRoutes = ['/login', '/register', '/ai-roleplay', '/profile/edit'];
+    const displayName = user?.first_name || user?.username || 'there';
 
     // Initial greeting based on context
     useEffect(() => {
@@ -28,12 +32,12 @@ const AIAssistant = () => {
     const getContextualGreeting = () => {
         setIsTyping(true);
         setTimeout(() => {
-            let greeting = `Hello ${user?.name || 'there'}! I'm Fodiye, your AI Career Mentor. How can I help you accelerate your growth today?`;
+            let greeting = `Hello ${displayName}! I'm Fodiye, your AI Career Mentor. How can I help you accelerate your growth today?`;
 
             // Context-aware logic
             const path = location.pathname;
             if (path.includes('/dashboard')) {
-                greeting = `Welcome back, ${user?.name}! efficient progress today. Would you like to review your latest skill analysis?`;
+                greeting = `Welcome back, ${displayName}! efficient progress today. Would you like to review your latest skill analysis?`;
             } else if (path.includes('/learning-path')) {
                 greeting = "This roadmap is designed specifically for your goal. Notice the focus on 'Communication' first? That's your quick-win area.";
             } else if (path.includes('/skills')) {
@@ -56,25 +60,27 @@ const AIAssistant = () => {
         setInput('');
         setIsTyping(true);
 
-        // Simulate AI processing
-        setTimeout(() => {
-            let aiResponse = "That's an interesting point. Let's explore that further in your learning path.";
+        try {
+            const data = await postAI('/ai/chat/', {
+                message: userMsg.text,
+                context: {
+                    page: location.pathname,
+                    page_title: document.title,
+                    language: language === 'HA' ? 'hausa' : 'english',
+                },
+            });
 
-            // Simple keyword matching for demo
-            const lowerInput = userMsg.text.toLowerCase();
-            if (lowerInput.includes('recommend') || lowerInput.includes('suggest')) {
-                aiResponse = "Based on your profile, I strongly recommend starting with the 'Active Listening' module. It's crucial for your leadership goal.";
-            } else if (lowerInput.includes('stress') || lowerInput.includes('anxiety')) {
-                aiResponse = "Managing stress is a key soft skill. I have a great 5-minute exercise on 'Cognitive Reframing' if you'd like to try it?";
-            } else if (lowerInput.includes('interview')) {
-                aiResponse = "Interviews can be daunting. We can practice common questions right here if you want.";
-            } else if (lowerInput.includes('thank')) {
-                aiResponse = "You're very welcome! I'm here whenever you need guidance.";
-            }
-
-            setMessages(prev => [...prev, { sender: 'ai', text: aiResponse, time: new Date() }]);
+            setMessages(prev => [...prev, { sender: 'ai', text: data.reply, time: new Date() }]);
             setIsTyping(false);
-        }, 1500);
+        } catch (err) {
+            setMessages(prev => [...prev, {
+                sender: 'ai',
+                text: err.message || "I could not connect to the AI service right now. Please try again.",
+                time: new Date(),
+            }]);
+            setIsTyping(false);
+            console.error(err);
+        }
     };
 
     if (!isAuthenticated || excludedRoutes.includes(location.pathname)) return null;

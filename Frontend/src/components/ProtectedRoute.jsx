@@ -13,10 +13,19 @@ const ProtectedRoute = ({ allowedRoles }) => {
         return <Navigate to="/login" replace />;
     }
 
+    // Wait until user object is available after successful auth state updates.
+    if (!user) {
+        return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    }
+
     if (allowedRoles && !allowedRoles.includes(user.role)) {
-        // Redirect to appropriate dashboard based on role to prevent infinite loops
-        // or just to a generic unauthorized page. For now, redirect home.
-        return <Navigate to="/" replace />;
+        if (['admin', 'super_admin'].includes(user.role)) {
+            return <Navigate to="/admin/dashboard" replace />;
+        }
+        if (user.role === 'tutor') {
+            return <Navigate to="/admin/tutor-dashboard" replace />;
+        }
+        return <Navigate to="/dashboard" replace />;
     }
 
     return <Outlet />;
