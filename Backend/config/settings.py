@@ -111,6 +111,14 @@ SIMPLE_JWT = {
     "SIGNING_KEY": config("JWT_SIGNING_KEY", default=SECRET_KEY),
 }
 
+# catching data 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
+
 CORS_ALLOW_ALL_ORIGINS = config("CORS_ALLOW_ALL_ORIGINS", default=True, cast=bool)
 CORS_ALLOWED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",

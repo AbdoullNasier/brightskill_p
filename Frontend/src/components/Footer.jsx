@@ -22,7 +22,7 @@ const Footer = () => {
                         <ul className="space-y-2 text-gray-400 text-sm">
                             <li><a href="/Skills" className="hover:text-primary transition-colors">Available Courses</a></li>
                             <li><a href="/community" className="hover:text-primary transition-colors">Community & Mentorship</a></li>
-                            <li><a href="/ai-roleplay" className="hover:text-primary transition-colors">AI Role Play</a></li>
+                            <li><a href="/become-tutor" className="hover:text-primary transition-colors">Become a Tutor</a></li>
                         </ul>
                     </div>
 

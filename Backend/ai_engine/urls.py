@@ -5,6 +5,9 @@ from .views import (
     RolePlayHistoryView,
     RolePlaySessionManageView,
     InterviewQuestionsView,
+    InterviewStartView,
+    InterviewAnswerView,
+    InterviewFinishView,
     InterviewSubmitView,
     LatestLearningPathView,
 )
@@ -15,6 +18,9 @@ urlpatterns = [
     path("roleplay/history/", RolePlayHistoryView.as_view(), name="roleplay_history"),
     path("roleplay/sessions/<int:session_id>/", RolePlaySessionManageView.as_view(), name="roleplay_session_manage"),
     path("interview/questions/", InterviewQuestionsView.as_view(), name="interview_questions"),
+    path("interview/start/", InterviewStartView.as_view(), name="interview_start"),
+    path("interview/answer/", InterviewAnswerView.as_view(), name="interview_answer"),
+    path("interview/finish/", InterviewFinishView.as_view(), name="interview_finish"),
     path("interview/submit/", InterviewSubmitView.as_view(), name="interview_submit"),
     path("interview/path/", LatestLearningPathView.as_view(), name="latest_learning_path"),
 ]

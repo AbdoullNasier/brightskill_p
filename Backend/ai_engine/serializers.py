@@ -22,6 +22,11 @@ REQUIRED_INTERVIEW_QUESTIONS = {
     "success_definition": "What would measurable success look like after 8 weeks?",
 }
 
+FIRST_INTERVIEW_QUESTION = {
+    "question_key": "career_goal",
+    "question_text": REQUIRED_INTERVIEW_QUESTIONS["career_goal"],
+}
+
 
 class FABRequestSerializer(serializers.Serializer):
     prompt = serializers.CharField()
@@ -116,3 +121,24 @@ class InterviewSubmitSerializer(serializers.Serializer):
                 {"missing_required_questions": missing, "required_questions": REQUIRED_INTERVIEW_QUESTIONS}
             )
         return value
+
+
+class InterviewStartSerializer(serializers.Serializer):
+    pass
+
+
+class InterviewAnswerSerializer(serializers.Serializer):
+    assessment_id = serializers.IntegerField()
+    question_key = serializers.CharField(max_length=100)
+    question_text = serializers.CharField()
+    response_text = serializers.CharField(allow_blank=False)
+
+    def validate_response_text(self, value):
+        clean = str(value).strip()
+        if not clean:
+            raise serializers.ValidationError("Response cannot be empty.")
+        return clean
+
+
+class InterviewFinishSerializer(serializers.Serializer):
+    assessment_id = serializers.IntegerField()

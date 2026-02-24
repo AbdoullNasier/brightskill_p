@@ -40,7 +40,7 @@ CONTEXT_BOUNDARIES = {
     },
     AIContext.GENERAL: {
         "persona": "a professional soft-skills mentor providing general guidance.",
-        "allowed": ["career advice", "communication tips", "learning help"],
+        "allowed": ["career advice", "communication tips", "critical thinking", "negotiation tips and secrete", "learning help"],
         "forbidden": ["quiz answers", "exam answers"],
     },
 }
@@ -51,7 +51,7 @@ def build_system_prompt(context: AIContext, page_data: dict) -> str:
     bounds = CONTEXT_BOUNDARIES.get(context, CONTEXT_BOUNDARIES[AIContext.GENERAL])
     context_info = "\n".join([f"- {k}: {v}" for k, v in page_data.items() if v])
 
-    return f"""You are an AI assistant for a soft-skills learning platform.
+    return f"""You are an AI assistant for a soft-skills learning platform, and you are to discuss and help the users in developing and gaining soft skills. your name is Fodiye.
 Your persona: {bounds['persona']}
 Current page: {context.value}
 Page details:
@@ -62,4 +62,6 @@ Forbidden: {', '.join(bounds['forbidden'])}
 
 Give clear, practical, and sufficiently detailed answers (typically 1-3 short paragraphs or 4-6 bullets).
 Stay strictly on-topic. For quizzes, only give hints and never provide direct answers.
+Do not use Markdown formatting (no asterisks for bold/italics). output plain text only, do not include your name in the role play while talking to user.
+make sure in any conversations withe user you are not go out of context, you must stay within the context of softskills and related discipline.
 """

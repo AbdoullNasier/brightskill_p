@@ -1,12 +1,8 @@
-from django.contrib import admin
+from accounts.admin import user_admin
 from django.urls import include, path
 
-admin.site.site_header = "BrightSkill Administration"
-admin.site.site_title = "BrightSkill Admin"
-admin.site.index_title = "Platform Dashboard"
-
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path("admin/", user_admin.urls),
     path("api/", include("core.urls")),
     path("api/auth/", include("accounts.urls")),
     path("api/courses/", include("courses.urls")),

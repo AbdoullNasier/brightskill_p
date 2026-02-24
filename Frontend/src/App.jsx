@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Form } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -16,13 +16,13 @@ import HowItWorks from "./pages/HowItWorks";
 import LessonView from "./pages/LessonView";
 import BookRecommendations from "./pages/BookRecommendations";
 import QuizAssessment from "./pages/QuizAssessment";
+import BecomeTutor from "./pages/BecomeTutor";
 
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ContentManagement from "./pages/admin/ContentManagement";
 
 import Analytics from "./pages/admin/Analytics";
-import SuperAdminDashboard from "./pages/admin/SuperAdminDashboard";
 import TutorDashboard from "./pages/admin/TutorDashboard";
 import UserManagement from "./pages/admin/UserManagement";
 
@@ -60,7 +60,7 @@ function App() {
         </Route>
 
         {/* Learner Protected Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['learner', 'admin', 'super_admin', 'tutor']} />}>
+        <Route element={<ProtectedRoute allowedRoles={['learner', 'admin', 'tutor']} />}>
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/certificate" element={<Certificate />} />
@@ -71,12 +71,12 @@ function App() {
             <Route path="/quiz/:id" element={<QuizAssessment />} />
             <Route path="/profile/edit" element={<EditProfile />} />
             <Route path="/badges" element={<Badges />} />
-            {/* Add other learner routes here */}
+            <Route path="/become-tutor" element={<BecomeTutor />} />
           </Route>
         </Route>
 
         {/* Admin Protected Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['admin', 'super_admin']} />}>
+        <Route element={<ProtectedRoute allowedRoles={['admin', ]} />}>
           <Route element={<AdminLayout />}>
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<UserManagement />} />
@@ -85,16 +85,9 @@ function App() {
         </Route>
 
         {/* Shared Admin/Tutor Content Route */}
-        <Route element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'tutor']} />}>
+        <Route element={<ProtectedRoute allowedRoles={['admin', 'tutor']} />}>
           <Route element={<AdminLayout />}>
             <Route path="/admin/content" element={<ContentManagement />} />
-          </Route>
-        </Route>
-
-        {/* Super Admin Route */}
-        <Route element={<ProtectedRoute allowedRoles={['super_admin']} />}>
-          <Route element={<AdminLayout />}>
-            <Route path="/admin/super-dashboard" element={<SuperAdminDashboard />} />
           </Route>
         </Route>
 

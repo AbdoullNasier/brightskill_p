@@ -77,7 +77,6 @@ const UserManagement = () => {
                         <option value="learner">Learner</option>
                         <option value="tutor">Tutor</option>
                         <option value="admin">Admin</option>
-                        <option value="super_admin">Super Admin</option>
                     </select>
                     <button onClick={loadUsers} className="bg-indigo-600 text-white rounded-lg p-2.5 hover:bg-indigo-700">
                         Apply
@@ -111,7 +110,6 @@ const UserManagement = () => {
                                             <option value="learner">Learner</option>
                                             <option value="tutor">Tutor</option>
                                             <option value="admin">Admin</option>
-                                            <option value="super_admin">Super Admin</option>
                                         </select>
                                     </td>
                                     <td className="px-6 py-4">

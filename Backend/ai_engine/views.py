@@ -26,13 +26,19 @@ from .serializers import (
     RolePlaySessionSerializer,
     RolePlaySessionUpdateSerializer,
     InterviewSubmitSerializer,
+    InterviewStartSerializer,
+    InterviewAnswerSerializer,
+    InterviewFinishSerializer,
     InterviewAssessmentSerializer,
     LearningPathSerializer,
     REQUIRED_INTERVIEW_QUESTIONS,
+    FIRST_INTERVIEW_QUESTION,
 )
 from .services import ask_gemini, preprocess_user_prompt
 
 INLINE_BOOK_RECOMMENDATIONS = config("INLINE_BOOK_RECOMMENDATIONS", default=False, cast=bool)
+MIN_DYNAMIC_INTERVIEW_QUESTIONS = 6
+MAX_DYNAMIC_INTERVIEW_QUESTIONS = 10
 
 
 def _generate_learning_path_from_responses(responses):
@@ -72,6 +78,83 @@ def _generate_learning_path_from_responses(responses):
         "focus_areas": focus_areas,
         "weekly_plan": weekly_plan,
     }
+
+
+def _extract_json_payload(raw_text):
+    text = (raw_text or "").strip()
+    if not text:
+        return {}
+
+    try:
+        return json.loads(text)
+    except Exception:
+        pass
+
+    start = text.find("{")
+    end = text.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        snippet = text[start : end + 1]
+        try:
+            return json.loads(snippet)
+        except Exception:
+            return {}
+    return {}
+
+
+def _fallback_next_question(assessment, asked_keys):
+    remaining = [k for k in REQUIRED_INTERVIEW_QUESTIONS if k not in asked_keys]
+    if remaining and assessment.responses.count() < MAX_DYNAMIC_INTERVIEW_QUESTIONS:
+        key = remaining[0]
+        return {
+            "question_key": key,
+            "question_text": REQUIRED_INTERVIEW_QUESTIONS[key],
+            "is_complete": False,
+        }
+    return {"question_key": "", "question_text": "", "is_complete": True}
+
+
+def _generate_next_interview_question(assessment):
+    responses = list(assessment.responses.order_by("id").values("question_key", "question_text", "response_text"))
+    asked_keys = {item["question_key"] for item in responses}
+
+    if len(responses) >= MAX_DYNAMIC_INTERVIEW_QUESTIONS:
+        return {"question_key": "", "question_text": "", "is_complete": True}
+
+    prompt = (
+        "You are an adaptive soft-skills interviewer. "
+        "Generate the single best next interview question based on prior answers.\n"
+        "Rules:\n"
+        "1) Keep questions focused on the user's goals and constraints.\n"
+        "2) Do not repeat previously asked questions.\n"
+        "3) Ask practical diagnostic questions that help build an 8-week plan.\n"
+        "4) Return JSON only with this schema:\n"
+        '{"question_key":"snake_case_key","question_text":"question","is_complete":false}\n'
+        "5) Use is_complete=true only when enough information is gathered for planning.\n"
+        "6) If unsure, ask one more concrete question.\n\n"
+        f"Previously asked keys: {sorted(list(asked_keys))}\n"
+        f"Interview transcript: {responses}"
+    )
+    raw = ask_gemini(prompt, max_output_tokens=180, temperature=0.3)
+    data = _extract_json_payload(raw)
+
+    question_key = str(data.get("question_key", "")).strip().lower()
+    question_text = str(data.get("question_text", "")).strip()
+    is_complete = bool(data.get("is_complete", False))
+
+    if len(responses) < MIN_DYNAMIC_INTERVIEW_QUESTIONS:
+        is_complete = False
+
+    if is_complete:
+        return {"question_key": "", "question_text": "", "is_complete": True}
+
+    if (
+        not question_key
+        or not question_text
+        or question_key in asked_keys
+    ):
+        return _fallback_next_question(assessment, asked_keys)
+
+    return {"question_key": question_key, "question_text": question_text, "is_complete": False}
 
 
 class FABAssistView(generics.GenericAPIView):
@@ -282,6 +365,142 @@ class InterviewQuestionsView(generics.GenericAPIView):
 
     def get(self, request):
         return Response({"required_questions": REQUIRED_INTERVIEW_QUESTIONS})
+
+
+class InterviewStartView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = InterviewStartSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        assessment = InterviewAssessment.objects.create(user=request.user)
+        return Response(
+            {
+                "assessment_id": assessment.id,
+                "question": FIRST_INTERVIEW_QUESTION,
+                "is_complete": False,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class InterviewAnswerView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = InterviewAnswerSerializer
+
+    @transaction.atomic
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        assessment_id = serializer.validated_data["assessment_id"]
+        question_key = serializer.validated_data["question_key"].strip()
+        question_text = serializer.validated_data["question_text"].strip()
+        response_text = serializer.validated_data["response_text"].strip()
+
+        assessment = InterviewAssessment.objects.filter(id=assessment_id, user=request.user).first()
+        if not assessment:
+            return Response({"detail": "Assessment not found."}, status=status.HTTP_404_NOT_FOUND)
+        if hasattr(assessment, "learning_path"):
+            return Response(
+                {"detail": "Interview already completed for this assessment."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if assessment.responses.filter(question_key=question_key).exists():
+            return Response({"detail": "Question already answered."}, status=status.HTTP_400_BAD_REQUEST)
+
+        InterviewResponse.objects.create(
+            assessment=assessment,
+            question_key=question_key,
+            question_text=question_text,
+            response_text=response_text,
+        )
+
+        next_question = _generate_next_interview_question(assessment)
+        payload = {
+            "assessment_id": assessment.id,
+            "is_complete": next_question["is_complete"],
+        }
+        if not next_question["is_complete"]:
+            payload["next_question"] = {
+                "question_key": next_question["question_key"],
+                "question_text": next_question["question_text"],
+            }
+        return Response(payload, status=status.HTTP_200_OK)
+
+
+class InterviewFinishView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = InterviewFinishSerializer
+
+    @transaction.atomic
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        assessment_id = serializer.validated_data["assessment_id"]
+
+        assessment = (
+            InterviewAssessment.objects.filter(id=assessment_id, user=request.user)
+            .prefetch_related("responses")
+            .first()
+        )
+        if not assessment:
+            return Response({"detail": "Assessment not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if hasattr(assessment, "learning_path"):
+            existing = assessment.learning_path
+            return Response(
+                {
+                    "message": "Learning path already generated.",
+                    "assessment": InterviewAssessmentSerializer(assessment).data,
+                    "learning_path": LearningPathSerializer(existing).data,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        response_items = list(assessment.responses.order_by("id"))
+        if len(response_items) < MIN_DYNAMIC_INTERVIEW_QUESTIONS:
+            return Response(
+                {
+                    "detail": (
+                        f"At least {MIN_DYNAMIC_INTERVIEW_QUESTIONS} answers are required before finishing."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        responses = {item.question_key: item.response_text.strip() for item in response_items}
+        learning_path_data = _generate_learning_path_from_responses(responses)
+        learning_path = LearningPath.objects.create(
+            user=request.user,
+            assessment=assessment,
+            title=learning_path_data["title"],
+            summary=learning_path_data["summary"],
+            weekly_plan=learning_path_data["weekly_plan"],
+            focus_areas=learning_path_data["focus_areas"],
+        )
+
+        try:
+            create_book_recommendation(
+                user=request.user,
+                topic=", ".join(learning_path.focus_areas[:2]) or "soft skills",
+                source_type="conversation",
+                source_id=assessment.id,
+            )
+        except Exception:
+            pass
+
+        return Response(
+            {
+                "message": "Interview assessment saved and learning path generated.",
+                "assessment": InterviewAssessmentSerializer(assessment).data,
+                "learning_path": LearningPathSerializer(learning_path).data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class InterviewSubmitView(generics.GenericAPIView):
