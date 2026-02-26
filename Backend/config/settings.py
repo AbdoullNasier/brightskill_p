@@ -1,12 +1,11 @@
-from datetime import timedelta
+﻿from datetime import timedelta
 from pathlib import Path
 
 from decouple import Csv, config
 from dotenv import load_dotenv
 
-load_dotenv()
-
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env", override=True)
 
 SECRET_KEY = config(
     "SECRET_KEY",
@@ -50,7 +49,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -90,6 +89,9 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"
 
@@ -111,11 +113,32 @@ SIMPLE_JWT = {
     "SIGNING_KEY": config("JWT_SIGNING_KEY", default=SECRET_KEY),
 }
 
-# catching data 
+EMAIL_BACKEND = config("EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = config("EMAIL_HOST", default="smtp.gmail.com")
+EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)
+EMAIL_USE_SSL = config("EMAIL_USE_SSL", default=False, cast=bool)
+EMAIL_TIMEOUT = config("EMAIL_TIMEOUT", default=20, cast=int)
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="BrightSkill <no-reply@brightskill.local>")
+
+# Prevent invalid SMTP config when both vars are set by environment sources.
+if EMAIL_USE_TLS and EMAIL_USE_SSL:
+    if EMAIL_PORT == 465:
+        EMAIL_USE_TLS = False
+    elif EMAIL_PORT == 587:
+        EMAIL_USE_SSL = False
+    else:
+        EMAIL_USE_TLS = False
+
+FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:5173")
+
+# catching data
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
     }
 }
 

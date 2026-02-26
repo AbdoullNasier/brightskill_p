@@ -1,38 +1,53 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdWork, MdClose, MdPsychology } from 'react-icons/md';
-import { postAI, getAI } from '../utils/aiClient';
+import { postAI } from '../utils/aiClient';
 
 const CareerAssessmentModal = ({ isOpen, onClose }) => {
     const navigate = useNavigate();
     const [view, setView] = useState('intro');
     const [step, setStep] = useState(0);
     const [error, setError] = useState('');
+    const [assessmentId, setAssessmentId] = useState(null);
     const [questions, setQuestions] = useState([]);
     const [responses, setResponses] = useState({});
     const [analysisResult, setAnalysisResult] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (!isOpen) return;
-        const loadQuestions = async () => {
-            try {
-                const data = await getAI('/interview/questions/');
-                const mapped = Object.entries(data.required_questions || {}).map(([key, title]) => ({ key, title }));
-                setQuestions(mapped);
-            } catch (err) {
-                setQuestions([]);
-            }
-        };
-
-        loadQuestions();
+        setView('intro');
+        setStep(0);
+        setError('');
+        setAssessmentId(null);
+        setQuestions([]);
+        setResponses({});
+        setAnalysisResult(null);
+        setIsSubmitting(false);
     }, [isOpen]);
 
-    const progress = questions.length ? Math.round(((step + 1) / questions.length) * 100) : 0;
+    const progress = Math.min(Math.round(((step + 1) / 10) * 100), 100);
     const currentQuestion = questions[step];
 
-    const handleStart = () => {
-        setView('form');
-        setStep(0);
+    const handleStart = async () => {
+        setError('');
+        setIsSubmitting(true);
+        try {
+            const data = await postAI('/interview/start/', {});
+            const firstQuestion = data?.question;
+            if (!data?.assessment_id || !firstQuestion?.question_key || !firstQuestion?.question_text) {
+                throw new Error('Failed to start interview.');
+            }
+
+            setAssessmentId(data.assessment_id);
+            setQuestions([{ key: firstQuestion.question_key, title: firstQuestion.question_text }]);
+            setStep(0);
+            setView('form');
+        } catch (err) {
+            setError(err.message || 'Failed to start interview.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const updateResponse = (key, value) => {
@@ -41,30 +56,47 @@ const CareerAssessmentModal = ({ isOpen, onClose }) => {
     };
 
     const handleNext = async () => {
+        if (!currentQuestion || !assessmentId) {
+            setError('Interview session not initialized. Please restart.');
+            return;
+        }
+
         const value = responses[currentQuestion.key];
         if (!value || !String(value).trim()) {
             setError('Please answer this question before continuing.');
             return;
         }
 
-        if (step < questions.length - 1) {
-            setStep((prev) => prev + 1);
-            return;
-        }
-
-        setView('analyzing');
+        setIsSubmitting(true);
+        setError('');
         try {
-            const data = await postAI('/interview/submit/', { responses });
-            setAnalysisResult(data.learning_path);
+            const answerData = await postAI('/interview/answer/', {
+                assessment_id: assessmentId,
+                question_key: currentQuestion.key,
+                question_text: currentQuestion.title,
+                response_text: String(value).trim(),
+            });
+
+            if (answerData?.is_complete) {
+                setView('analyzing');
+                const finishData = await postAI('/interview/finish/', { assessment_id: assessmentId });
+                setAnalysisResult(finishData?.learning_path || null);
+                setView('complete');
+                return;
+            }
+
+            const nextQuestion = answerData?.next_question;
+            if (!nextQuestion?.question_key || !nextQuestion?.question_text) {
+                throw new Error('Interview returned an invalid next question.');
+            }
+            setQuestions((prev) => [...prev, { key: nextQuestion.question_key, title: nextQuestion.question_text }]);
+            setStep((prev) => prev + 1);
         } catch (err) {
             setError(err.message || 'Failed to save interview responses.');
+            if (view === 'analyzing') setView('form');
         } finally {
-            setTimeout(() => setView('complete'), 900);
+            setIsSubmitting(false);
         }
-    };
-
-    const handleBack = () => {
-        if (step > 0) setStep((prev) => prev - 1);
     };
 
     const handleFinish = () => {
@@ -104,8 +136,9 @@ const CareerAssessmentModal = ({ isOpen, onClose }) => {
                     {view === 'intro' && (
                         <div className="text-center">
                             <p className="text-gray-600 mb-6">This form saves your responses in the database and creates a personalized path.</p>
+                            {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
                             <div className="space-y-3">
-                                <button onClick={handleStart} className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                                <button onClick={handleStart} disabled={isSubmitting} className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
                                     <MdWork /> Start Assessment
                                 </button>
                                 <button onClick={onClose} className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl">
@@ -119,7 +152,7 @@ const CareerAssessmentModal = ({ isOpen, onClose }) => {
                         <div className="h-full flex flex-col">
                             <div className="mb-6">
                                 <div className="flex justify-between text-sm text-gray-600 mb-2">
-                                    <span>Step {step + 1} of {questions.length}</span>
+                                    <span>Question {step + 1}</span>
                                     <span>{progress}%</span>
                                 </div>
                                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -139,12 +172,9 @@ const CareerAssessmentModal = ({ isOpen, onClose }) => {
                                 {error && <p className="text-sm text-red-600 mt-4">{error}</p>}
                             </div>
 
-                            <div className="mt-5 flex items-center justify-between">
-                                <button onClick={handleBack} disabled={step === 0} className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                                    Back
-                                </button>
-                                <button onClick={handleNext} className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700">
-                                    {step === questions.length - 1 ? 'Generate My Path' : 'Next'}
+                            <div className="mt-5 flex items-center justify-end">
+                                <button onClick={handleNext} disabled={isSubmitting} className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed">
+                                    {isSubmitting ? 'Saving...' : 'Next'}
                                 </button>
                             </div>
                         </div>

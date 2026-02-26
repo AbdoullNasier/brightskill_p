@@ -1,62 +1,60 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { MdSchool, MdUploadFile, MdAssignment } from 'react-icons/md';
 import { apiGet, apiPost } from '../../utils/apiClient';
 
 const TutorDashboard = () => {
-    const [modules, setModules] = useState([]);
+    const [courses, setCourses] = useState([]);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [form, setForm] = useState({
-        module: '',
+        course: '',
         title: '',
         order: 1,
         content: '',
         video_url: '',
-        duration_minutes: 10,
     });
 
-    const loadModules = async () => {
+    const loadCourses = async () => {
         try {
-            const data = await apiGet('/courses/modules/');
-            setModules(data);
-            if (!form.module && data.length > 0) {
-                setForm((prev) => ({ ...prev, module: String(data[0].id) }));
+            const data = await apiGet('/courses/courses/');
+            setCourses(data);
+            if (!form.course && data.length > 0) {
+                setForm((prev) => ({ ...prev, course: String(data[0].id) }));
             }
         } catch (err) {
-            setError(err.message || 'Failed to load modules');
+            setError(err.message || 'Failed to load courses');
         }
     };
 
     useEffect(() => {
-        loadModules();
+        loadCourses();
     }, []);
 
     const submitLesson = async (e) => {
         e.preventDefault();
         setError('');
         setSuccess('');
-        if (!form.module || !form.title.trim() || !form.content.trim()) {
-            setError('Module, title and content are required');
+        if (!form.course || !form.title.trim() || !form.content.trim()) {
+            setError('Course, title and content are required');
             return;
         }
         try {
             await apiPost('/courses/lessons/', {
-                module: Number(form.module),
+                course: Number(form.course),
                 title: form.title.trim(),
                 order: Number(form.order) || 1,
                 content: form.content.trim(),
                 video_url: form.video_url.trim() || null,
-                duration_minutes: Number(form.duration_minutes) || 10,
             });
             setSuccess('Lesson created successfully.');
             setForm((prev) => ({
                 ...prev,
                 title: '',
                 content: '',
-                video_url: '',
                 order: 1,
-                duration_minutes: 10,
+                video_url: '',
             }));
+            await loadCourses();
         } catch (err) {
             setError(err.message || 'Failed to create lesson');
         }
@@ -78,14 +76,14 @@ const TutorDashboard = () => {
                     </h2>
                     <form className="space-y-4" onSubmit={submitLesson}>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Module</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Course</label>
                             <select
                                 className="w-full p-2 border border-gray-300 rounded-lg"
-                                value={form.module}
-                                onChange={(e) => setForm((prev) => ({ ...prev, module: e.target.value }))}
+                                value={form.course}
+                                onChange={(e) => setForm((prev) => ({ ...prev, course: e.target.value }))}
                             >
-                                {modules.map((mod) => (
-                                    <option key={mod.id} value={mod.id}>{mod.title}</option>
+                                {courses.map((course) => (
+                                    <option key={course.id} value={course.id}>{course.title}</option>
                                 ))}
                             </select>
                         </div>
@@ -103,42 +101,31 @@ const TutorDashboard = () => {
                             <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
                             <textarea
                                 className="w-full p-2 border border-gray-300 rounded-lg"
-                                rows="4"
+                                rows="6"
                                 value={form.content}
                                 onChange={(e) => setForm((prev) => ({ ...prev, content: e.target.value }))}
-                                placeholder="Lesson content in markdown"
+                                placeholder="Lesson content"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Video URL (optional)</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Lesson Video URL (optional)</label>
                             <input
                                 type="url"
                                 className="w-full p-2 border border-gray-300 rounded-lg"
                                 value={form.video_url}
                                 onChange={(e) => setForm((prev) => ({ ...prev, video_url: e.target.value }))}
+                                placeholder="https://youtube.com/watch?v=..."
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Order</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    className="w-full p-2 border border-gray-300 rounded-lg"
-                                    value={form.order}
-                                    onChange={(e) => setForm((prev) => ({ ...prev, order: e.target.value }))}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Duration (min)</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    className="w-full p-2 border border-gray-300 rounded-lg"
-                                    value={form.duration_minutes}
-                                    onChange={(e) => setForm((prev) => ({ ...prev, duration_minutes: e.target.value }))}
-                                />
-                            </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Order</label>
+                            <input
+                                type="number"
+                                min="1"
+                                className="w-full p-2 border border-gray-300 rounded-lg"
+                                value={form.order}
+                                onChange={(e) => setForm((prev) => ({ ...prev, order: e.target.value }))}
+                            />
                         </div>
                         <div className="pt-4">
                             <button type="submit" className="w-full bg-primary text-white py-3 rounded-xl font-semibold hover:bg-primary-dark transition-colors">
@@ -150,17 +137,20 @@ const TutorDashboard = () => {
 
                 <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
                     <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
-                        <MdAssignment className="mr-2 text-secondary" /> Available Modules
+                        <MdAssignment className="mr-2 text-secondary" /> Available Courses
                     </h2>
                     <div className="space-y-4">
-                        {modules.map((item) => (
+                        {courses.map((item) => (
                             <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
                                 <div>
                                     <h4 className="font-bold text-gray-800">{item.title}</h4>
-                                    <p className="text-sm text-gray-500">{item.lesson_count} lessons</p>
+                                    <p className="text-sm text-gray-500">{item.lessons?.length || 0} lessons</p>
                                 </div>
                             </div>
                         ))}
+                        {courses.length === 0 && (
+                            <p className="text-sm text-gray-500">No courses available yet. Create one in Content Management.</p>
+                        )}
                     </div>
                 </div>
             </div>

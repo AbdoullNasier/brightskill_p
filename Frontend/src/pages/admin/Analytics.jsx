@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import Card from '../../components/Card';
 import { MdTrendingUp, MdBarChart } from 'react-icons/md';
 import { apiGet } from '../../utils/apiClient';
@@ -19,8 +19,8 @@ const Analytics = () => {
         loadAnalytics();
     }, []);
 
-    const popularity = stats?.module_popularity || [];
-    const maxPopularity = Math.max(...popularity.map((m) => m.completed_by_users), 1);
+    const popularity = stats?.course_popularity || [];
+    const maxPopularity = Math.max(...popularity.map((m) => m.enrolled_users), 1);
 
     return (
         <div className="space-y-6">
@@ -60,20 +60,20 @@ const Analytics = () => {
 
                 <Card className="p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-bold text-gray-800">Module Popularity</h2>
+                        <h2 className="text-lg font-bold text-gray-800">Course Popularity</h2>
                         <MdBarChart className="text-indigo-500 text-2xl" />
                     </div>
                     <div className="space-y-3">
                         {popularity.length === 0 && (
-                            <p className="text-sm text-gray-500">No completion data yet.</p>
+                            <p className="text-sm text-gray-500">No enrollment data yet.</p>
                         )}
                         {popularity.map((item) => {
-                            const width = `${Math.max(8, Math.round((item.completed_by_users / maxPopularity) * 100))}%`;
+                            const width = `${Math.max(8, Math.round((item.enrolled_users / maxPopularity) * 100))}%`;
                             return (
-                                <div key={item.module_id}>
+                                <div key={item.course_id}>
                                     <div className="flex justify-between text-sm mb-1">
-                                        <span>{item.module_title}</span>
-                                        <span className="font-bold">{item.completed_by_users}</span>
+                                        <span>{item.course_title}</span>
+                                        <span className="font-bold">{item.enrolled_users}</span>
                                     </div>
                                     <div className="w-full bg-gray-200 rounded-full h-2">
                                         <div className="bg-indigo-600 h-2 rounded-full" style={{ width }} />
@@ -93,8 +93,8 @@ const Analytics = () => {
                         <p className="text-xl font-bold text-blue-700">{stats?.certificates_issued ?? 0}</p>
                     </div>
                     <div className="p-4 bg-purple-50 rounded-lg">
-                        <p className="text-sm text-gray-500">Modules</p>
-                        <p className="text-xl font-bold text-purple-700">{stats?.total_modules ?? 0}</p>
+                        <p className="text-sm text-gray-500">Courses</p>
+                        <p className="text-xl font-bold text-purple-700">{stats?.total_courses ?? 0}</p>
                     </div>
                     <div className="p-4 bg-orange-50 rounded-lg">
                         <p className="text-sm text-gray-500">Learners</p>

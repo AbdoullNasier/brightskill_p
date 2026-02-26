@@ -1,13 +1,24 @@
-import React from 'react';
+﻿import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { MdDashboard, MdLibraryBooks, MdAnalytics, MdLogout, MdPeople, MdSchool } from 'react-icons/md';
+import {
+    MdDashboard,
+    MdLibraryBooks,
+    MdAnalytics,
+    MdLogout,
+    MdPeople,
+    MdSchool,
+    MdChevronLeft,
+    MdChevronRight,
+} from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/Images/logo1.png';
+import appIcon from '../assets/Images/Icon.png';
 
 const AdminLayout = () => {
     const { logout, user } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
+    const [collapsed, setCollapsed] = useState(false);
 
     const handleLogout = () => {
         logout();
@@ -17,6 +28,7 @@ const AdminLayout = () => {
     const adminSidebarLinks = [
         { name: 'Dashboard', path: '/admin/dashboard', icon: <MdDashboard /> },
         { name: 'Users', path: '/admin/users', icon: <MdPeople /> },
+        { name: 'Tutor Applications', path: '/admin/tutor-applications', icon: <MdSchool /> },
         { name: 'Content Management', path: '/admin/content', icon: <MdLibraryBooks /> },
         { name: 'Analytics', path: '/admin/analytics', icon: <MdAnalytics /> },
     ];
@@ -28,11 +40,22 @@ const AdminLayout = () => {
 
     return (
         <div className="flex h-screen bg-gray-100">
-            {/* Sidebar */}
-            <div className="w-64 bg-white shadow-lg flex flex-col">
-                <div className="p-4 border-b flex items-center justify-center">
-                    <img src={logo} alt="BrightSkill" className="h-10" />
-                    <span className="ml-2 font-bold text-gray-700">{user?.role === 'tutor' ? 'Tutor' : 'Admin'}</span>
+            <div className={`${collapsed ? 'w-20' : 'w-64'} bg-white shadow-lg flex flex-col transition-all duration-300`}>
+                <div className="p-4 border-b flex items-center justify-between">
+                    <div className="flex items-center">
+                        <img src={collapsed ? appIcon : logo} alt="BrightSkill" className={collapsed ? 'h-8 w-8' : 'h-10'} />
+                        {!collapsed && (
+                            <span className="ml-2 font-bold text-gray-700">{user?.role === 'tutor' ? 'Tutor' : 'Admin'}</span>
+                        )}
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setCollapsed((prev) => !prev)}
+                        className="rounded-md p-1 text-gray-600 hover:bg-gray-100 hover:text-indigo-600"
+                        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                    >
+                        {collapsed ? <MdChevronRight size={20} /> : <MdChevronLeft size={20} />}
+                    </button>
                 </div>
 
                 <nav className="flex-1 overflow-y-auto py-4">
@@ -42,12 +65,12 @@ const AdminLayout = () => {
                                 <Link
                                     to={link.path}
                                     className={`flex items-center p-3 rounded-lg transition-colors ${location.pathname === link.path
-                                            ? 'bg-indigo-50 text-indigo-600'
-                                            : 'text-gray-600 hover:bg-gray-50'
+                                        ? 'bg-indigo-50 text-indigo-600'
+                                        : 'text-gray-600 hover:bg-indigo-100 hover:text-indigo-700'
                                         }`}
                                 >
-                                    <span className="text-xl mr-3">{link.icon}</span>
-                                    <span className="font-medium">{link.name}</span>
+                                    <span className={`text-xl ${collapsed ? '' : 'mr-3'}`}>{link.icon}</span>
+                                    {!collapsed && <span className="font-medium">{link.name}</span>}
                                 </Link>
                             </li>
                         ))}
@@ -57,15 +80,14 @@ const AdminLayout = () => {
                 <div className="p-4 border-t">
                     <button
                         onClick={handleLogout}
-                        className="flex items-center w-full p-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                        className="flex items-center w-full p-3 rounded-lg text-red-600 hover:bg-red-100 transition-colors"
                     >
-                        <MdLogout className="text-xl mr-3" />
-                        <span className="font-medium">Logout</span>
+                        <MdLogout className={`text-xl ${collapsed ? '' : 'mr-3'}`} />
+                        {!collapsed && <span className="font-medium">Logout</span>}
                     </button>
                 </div>
             </div>
 
-            {/* Main Content */}
             <div className="flex-1 overflow-auto">
                 <main className="p-8">
                     <Outlet />

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import Card from '../../components/Card';
 import { MdPeople, MdLibraryBooks, MdSchool, MdTrendingUp } from 'react-icons/md';
 import { apiGet } from '../../utils/apiClient';
@@ -35,8 +35,8 @@ const AdminDashboard = () => {
             bg: 'bg-green-100',
         },
         {
-            title: 'Total Modules',
-            value: stats?.total_modules ?? 0,
+            title: 'Total Courses',
+            value: stats?.total_courses ?? 0,
             icon: <MdLibraryBooks />,
             color: 'text-indigo-600',
             bg: 'bg-indigo-100',

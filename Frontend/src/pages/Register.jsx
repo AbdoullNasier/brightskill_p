@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -14,6 +14,7 @@ const Register = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const { register, loading, isAuthenticated, user } = useAuth();
     const { t } = useLanguage();
     const navigate = useNavigate();
@@ -25,16 +26,29 @@ const Register = () => {
         const hasLowerCase = /[a-z]/.test(pwd);
         const hasNumberOrSpecial = /[0-9!@#$%^&*]/.test(pwd);
 
-        if (pwd.length < minLength) return "Password must be at least 8 characters long.";
-        if (!hasUpperCase) return "Password must contain at least one uppercase letter.";
-        if (!hasLowerCase) return "Password must contain at least one lowercase letter.";
-        if (!hasNumberOrSpecial) return "Password must contain at least one number or special character.";
-        return null; // Valid
+        if (pwd.length < minLength) return 'Password must be at least 8 characters long.';
+        if (!hasUpperCase) return 'Password must contain at least one uppercase letter.';
+        if (!hasLowerCase) return 'Password must contain at least one lowercase letter.';
+        if (!hasNumberOrSpecial) return 'Password must contain at least one number or special character.';
+        return null;
+    };
+
+    const redirectByRole = (registeredUser) => {
+        if (location.state?.from) {
+            navigate(location.state.from);
+        } else if (['admin', 'super_admin'].includes(registeredUser.role)) {
+            navigate('/admin/dashboard');
+        } else if (registeredUser.role === 'tutor') {
+            navigate('/admin/tutor-dashboard');
+        } else {
+            navigate('/dashboard');
+        }
     };
 
     const handleRegister = async (e) => {
         e.preventDefault();
         setError('');
+        setSuccess('');
 
         if (password !== confirmPassword) {
             setError('Passwords do not match');
@@ -48,29 +62,18 @@ const Register = () => {
         }
 
         try {
-            await register(name, username, email, password, confirmPassword);
-            if (location.state?.from) {
-                navigate(location.state.from);
-            } else {
-                navigate('/dashboard');
-            }
+            const registeredUser = await register(name, username, email, password, confirmPassword);
+            setSuccess('Registration successful. Redirecting...');
+            setTimeout(() => redirectByRole(registeredUser), 1500);
         } catch (err) {
             setError(err.message || 'Failed to create an account');
-            console.error('Registration error:', err);
         }
     };
 
     useEffect(() => {
-        if (!isAuthenticated || !user) return;
-
-        if (['admin', 'super_admin'].includes(user.role)) {
-            navigate('/admin/dashboard', { replace: true });
-        } else if (user.role === 'tutor') {
-            navigate('/admin/tutor-dashboard', { replace: true });
-        } else {
-            navigate('/dashboard', { replace: true });
-        }
-    }, [isAuthenticated, user, navigate]);
+        if (!isAuthenticated || !user || success) return;
+        redirectByRole(user);
+    }, [isAuthenticated, user, success]);
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -115,7 +118,7 @@ const Register = () => {
                         <Input
                             label={t('auth.password_label')}
                             type={showPassword ? 'text' : 'password'}
-                            placeholder="••••••••"
+                            placeholder="********"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
@@ -124,7 +127,7 @@ const Register = () => {
                         <Input
                             label={t('auth.confirm_password')}
                             type={showPassword ? 'text' : 'password'}
-                            placeholder="••••••••"
+                            placeholder="********"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             required
@@ -146,9 +149,13 @@ const Register = () => {
                                 Show Password
                             </label>
                         </div>
-
-                        
                     </div>
+
+                    {success && (
+                        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm">
+                            {success}
+                        </div>
+                    )}
 
                     {error && (
                         <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded text-sm">
@@ -161,7 +168,7 @@ const Register = () => {
 
                     <div>
                         <Button type="submit" className="w-full flex justify-center py-3">
-                            {t('auth.signup_btn')}
+                            {loading ? 'Creating account...' : t('auth.signup_btn')}
                         </Button>
                     </div>
                 </form>
@@ -171,3 +178,4 @@ const Register = () => {
 };
 
 export default Register;
+

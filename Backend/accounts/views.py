@@ -1,7 +1,18 @@
+import logging
+import threading
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core.mail import send_mail
+from django.db import IntegrityError
 from django.db.models import Q, Count
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
 from rest_framework import generics, permissions, status
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -11,15 +22,33 @@ from courses.models import Course
 from progress.models import Progress, Enrollment, LessonCompletion
 from certificates.models import Certificate
 from ai_engine.models import LearningPath
+from .models import TutorApplication
 from .serializers import (
     UserSerializer,
     RegisterSerializer,
     CustomTokenObtainPairSerializer,
     AdminUserSerializer,
     AdminUserUpdateSerializer,
+    TutorApplicationSerializer,
+    TutorApplicationAdminSerializer,
+    PasswordResetRequestSerializer,
+    PasswordResetConfirmSerializer,
 )
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
+
+
+def _send_notification_email(subject, html_body, recipient):
+    plain_body = strip_tags(html_body)
+    send_mail(
+        subject=subject,
+        message=plain_body,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[recipient],
+        html_message=html_body,
+        fail_silently=False,
+    )
 
 
 class RegisterView(generics.CreateAPIView):
@@ -31,6 +60,19 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+
+        try:
+            _send_notification_email(
+                subject="Welcome to BrightSkill",
+                html_body=(
+                    f"<p>Hi {user.first_name or user.username},</p>"
+                    "<p>Thank you for registering on BrightSkill.</p>"
+                    "<p>You can now log in and start your learning journey.</p>"
+                ),
+                recipient=user.email,
+            )
+        except Exception:
+            logger.exception("Welcome email failed for user_id=%s", user.id)
 
         refresh = RefreshToken.for_user(user)
         return Response(
@@ -55,6 +97,181 @@ class UserDetailView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class TutorApplicationCreateView(generics.CreateAPIView):
+    serializer_class = TutorApplicationSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            {
+                "message": "Tutor application submitted successfully.",
+                "application": serializer.data,
+            },
+            status=status.HTTP_201_CREATED,
+            headers=headers,
+        )
+
+    def perform_create(self, serializer):
+        user = self.request.user
+
+        if user.role != User.Roles.LEARNER:
+            raise PermissionDenied("Only learners can apply to become tutors.")
+
+        has_pending = TutorApplication.objects.filter(
+            user=user,
+            status=TutorApplication.Status.PENDING,
+        ).exists()
+        if has_pending:
+            raise ValidationError({"detail": "You already have a pending tutor application."})
+
+        try:
+            serializer.save(user=user, status=TutorApplication.Status.PENDING)
+        except IntegrityError:
+            raise ValidationError({"detail": "You already have a pending tutor application."})
+
+
+class AdminTutorApplicationListView(generics.ListAPIView):
+    permission_classes = (IsPlatformAdmin,)
+    serializer_class = TutorApplicationAdminSerializer
+
+    def get_queryset(self):
+        return TutorApplication.objects.select_related("user").order_by("-created_at")
+
+
+class AdminTutorApplicationApproveView(generics.GenericAPIView):
+    permission_classes = (IsPlatformAdmin,)
+    serializer_class = TutorApplicationAdminSerializer
+
+    def patch(self, request, application_id):
+        application = generics.get_object_or_404(TutorApplication.objects.select_related("user"), pk=application_id)
+        application.status = TutorApplication.Status.APPROVED
+        application.save(update_fields=["status"])
+
+        if application.user.role != User.Roles.TUTOR:
+            application.user.role = User.Roles.TUTOR
+            application.user.save(update_fields=["role"])
+
+        try:
+            _send_notification_email(
+                subject="Tutor Application Approved",
+                html_body=(
+                    f"<p>Hi {application.user.first_name or application.user.username},</p>"
+                    "<p>Congratulations. Your tutor application has been approved.</p>"
+                    "<p>You can now access your Tutor Dashboard and start creating lessons.</p>"
+                ),
+                recipient=application.user.email,
+            )
+        except Exception:
+            logger.exception("Tutor approved email failed for application_id=%s", application.id)
+
+        return Response(
+            {
+                "message": "Tutor application approved.",
+                "application": self.get_serializer(application).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class AdminTutorApplicationRejectView(generics.GenericAPIView):
+    permission_classes = (IsPlatformAdmin,)
+    serializer_class = TutorApplicationAdminSerializer
+
+    def patch(self, request, application_id):
+        application = generics.get_object_or_404(TutorApplication.objects.select_related("user"), pk=application_id)
+        application.status = TutorApplication.Status.REJECTED
+        application.save(update_fields=["status"])
+
+        if application.user.role != User.Roles.LEARNER:
+            application.user.role = User.Roles.LEARNER
+            application.user.save(update_fields=["role"])
+
+        try:
+            _send_notification_email(
+                subject="Tutor Application Update",
+                html_body=(
+                    f"<p>Hi {application.user.first_name or application.user.username},</p>"
+                    "<p>Thank you for your interest in becoming a tutor.</p>"
+                    "<p>At this time, your application was not approved."
+                    " We encourage you to continue improving your profile and apply again later.</p>"
+                ),
+                recipient=application.user.email,
+            )
+        except Exception:
+            logger.exception("Tutor rejected email failed for application_id=%s", application.id)
+
+        return Response(
+            {
+                "message": "Tutor application rejected.",
+                "application": self.get_serializer(application).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class PasswordResetRequestView(generics.GenericAPIView):
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = PasswordResetRequestSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data["email"]
+        user = User.objects.filter(email__iexact=email).first()
+        if not user:
+            raise ValidationError({"email": "No account is registered with this email address."})
+
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = PasswordResetTokenGenerator().make_token(user)
+        reset_link = f"{settings.FRONTEND_URL.rstrip('/')}/reset-password/{uid}/{token}/"
+
+        context = {
+            "user": user,
+            "reset_link": reset_link,
+        }
+        html_body = render_to_string("registration/password_reset_email.html", context)
+        # Non-blocking SMTP send so API response remains fast.
+        def _send_reset_email_async():
+            try:
+                _send_notification_email(
+                    subject="Reset your BrightSkill password",
+                    html_body=html_body,
+                    recipient=user.email,
+                )
+            except Exception:
+                logger.exception("Password reset email failed for user_id=%s", user.id)
+
+        threading.Thread(target=_send_reset_email_async, daemon=True).start()
+
+        return Response(
+            {"message": "Password reset request accepted. Please check your inbox shortly."},
+            status=status.HTTP_200_OK,
+        )
+
+
+class PasswordResetConfirmView(generics.GenericAPIView):
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = PasswordResetConfirmSerializer
+
+    def post(self, request, uidb64, token):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.validate_user(uidb64)
+        if not user or not serializer.validate_token(user, token):
+            raise ValidationError({"detail": "Invalid or expired password reset link."})
+
+        user.set_password(serializer.validated_data["new_password"])
+        user.save(update_fields=["password"])
+
+        return Response({"message": "Password reset successful."}, status=status.HTTP_200_OK)
 
 
 class AdminDashboardStatsView(generics.GenericAPIView):
@@ -198,3 +415,4 @@ class LeaderboardView(generics.GenericAPIView):
             row["rank"] = index
 
         return Response(rows[:10])
+

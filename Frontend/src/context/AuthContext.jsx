@@ -10,6 +10,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [initializing, setInitializing] = useState(true);
     const [tokens, setTokens] = useState({ access: null, refresh: null });
 
     const [activeCourseId, setActiveCourseId] = useState(null);
@@ -41,6 +42,7 @@ export const AuthProvider = ({ children }) => {
                 localStorage.removeItem('brightskill_tokens');
                 localStorage.removeItem('brightskill_user');
             } finally {
+                setInitializing(false);
                 setLoading(false);
             }
         };
@@ -100,6 +102,20 @@ export const AuthProvider = ({ children }) => {
         return response;
     };
 
+    const refreshCurrentUser = async () => {
+        if (!tokens.access) return null;
+
+        const response = await apiRequest('/auth/profile/');
+        if (!response.ok) {
+            return null;
+        }
+
+        const latestUser = await response.json();
+        setUser(latestUser);
+        localStorage.setItem('brightskill_user', JSON.stringify(latestUser));
+        return latestUser;
+    };
+
     const fetchProgressSnapshot = async () => {
         if (!isAuthenticated) return;
 
@@ -136,6 +152,17 @@ export const AuthProvider = ({ children }) => {
         fetchProgressSnapshot();
     }, [isAuthenticated, tokens.access]);
 
+    useEffect(() => {
+        if (!isAuthenticated || !tokens.access) return;
+
+        refreshCurrentUser();
+        const intervalId = setInterval(() => {
+            refreshCurrentUser();
+        }, 60000);
+
+        return () => clearInterval(intervalId);
+    }, [isAuthenticated, tokens.access]);
+
     const login = async (username, password) => {
         setLoading(true);
         try {
@@ -145,20 +172,40 @@ export const AuthProvider = ({ children }) => {
                 body: JSON.stringify({ username, password }),
             });
 
+            const data = await response.json().catch(() => ({}));
+
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.detail || 'Login failed');
+                const firstFieldError = Object.entries(data).find(
+                    ([key, value]) => key !== 'detail' && Array.isArray(value) && value.length > 0
+                );
+                const message =
+                    data.detail ||
+                    (firstFieldError ? firstFieldError[1][0] : null) ||
+                    'Invalid username or password';
+                throw new Error(message);
             }
 
-            const data = await response.json();
             const nextTokens = { access: data.access, refresh: data.refresh };
+
             setTokens(nextTokens);
             setUser(data.user);
             setIsAuthenticated(true);
+
             localStorage.setItem('brightskill_tokens', JSON.stringify(nextTokens));
             localStorage.setItem('brightskill_user', JSON.stringify(data.user));
-            await fetchProgressSnapshot();
-            return data.user;
+
+            fetchProgressSnapshot();
+
+            return {
+                success: true,
+                message: 'Login successful. Redirecting...',
+                user: data.user,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: error.message,
+            };
         } finally {
             setLoading(false);
         }
@@ -192,7 +239,7 @@ export const AuthProvider = ({ children }) => {
             setIsAuthenticated(true);
             localStorage.setItem('brightskill_tokens', JSON.stringify(nextTokens));
             localStorage.setItem('brightskill_user', JSON.stringify(data.user));
-            await fetchProgressSnapshot();
+            fetchProgressSnapshot();
             return data.user;
         } finally {
             setLoading(false);
@@ -281,7 +328,8 @@ export const AuthProvider = ({ children }) => {
         updateCourseProgress,
         completeCourse,
         refreshProgress: fetchProgressSnapshot,
+        refreshCurrentUser,
     };
 
-    return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+    return <AuthContext.Provider value={value}>{!initializing && children}</AuthContext.Provider>;
 };

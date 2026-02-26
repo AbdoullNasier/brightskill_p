@@ -11,50 +11,49 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const { login, loading, isAuthenticated, user } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
+  const isSubmitting = loading || Boolean(success);
+
+  const redirectByRole = (loggedInUser) => {
+    if (location.state?.from) {
+      navigate(location.state.from);
+    } else if (['admin', 'super_admin'].includes(loggedInUser.role)) {
+      navigate('/admin/dashboard');
+    } else if (loggedInUser.role === 'tutor') {
+      navigate('/admin/tutor-dashboard');
+    } else {
+      navigate('/dashboard');
+    }
+  };
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setError('');
+      e.preventDefault();
+      if (isSubmitting) return;
+      setError('');
+      setSuccess('');
 
-    try {
-      const user = await login(username, password);
-      if (location.state?.from) {
-        navigate(location.state.from);
-      } else if (['admin', 'super_admin'].includes(user.role)) {
-        navigate('/admin/dashboard');
-      } else if (user.role === 'tutor') {
-        navigate('/admin/tutor-dashboard');
-      } else {
-        navigate('/dashboard');
-      }
-    } catch (err) {
-      // Using string messages to avoid JSX in state
-      if (err.message === 'Username not registered') {
-        setError("You don't have an account. Create one at /register.");
-      } else if (err.message === 'Incorrect password') {
-        setError('Incorrect password');
-      } else {
-        setError(err.message || 'Failed to login');
-      }
-      console.error(err);
+      const result = await login(username, password);
+
+      if (result.success) {
+        setSuccess(result.message);
+
+        setTimeout(() => {
+          redirectByRole(result.user);
+      }, 1500);
+
+    } else {
+      setError(result.message);
     }
   };
 
   useEffect(() => {
-    if (!isAuthenticated || !user) return;
-
-    if (['admin', 'super_admin'].includes(user.role)) {
-      navigate('/admin/dashboard', { replace: true });
-    } else if (user.role === 'tutor') {
-      navigate('/admin/tutor-dashboard', { replace: true });
-    } else {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [isAuthenticated, user, navigate]);
+    if (!isAuthenticated || !user || success) return;
+    redirectByRole(user);
+  }, [isAuthenticated, user, success]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -87,28 +86,22 @@ const Login = () => {
             <Input
               label={t('auth.password_label')}
               type={showPassword ? 'text' : 'password'}
-              placeholder="••••••••"
+              placeholder="********"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
 
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm">
+              {success}
+            </div>
+          )}
+
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded text-sm">
-              {error.includes('/register') ? (
-                <span>
-                  You don't have an account.{' '}
-                  <Link
-                    to="/register"
-                    className="font-bold underline text-primary"
-                  >
-                    Create one
-                  </Link>
-                </span>
-              ) : (
-                error
-              )}
+              {error}
             </div>
           )}
 
@@ -131,18 +124,18 @@ const Login = () => {
             </div>
 
             <div className="text-sm">
-              <a
-                href="#"
+              <Link
+                to="/forgot-password"
                 className="font-medium text-primary hover:text-indigo-500"
               >
                 {t('auth.forgot_password')}
-              </a>
+              </Link>
             </div>
           </div>
 
           <div className="space-y-3">
             <Button type="submit" className="w-full flex justify-center py-3">
-              {loading ? t('auth.signin_loading') : t('auth.signin_btn')}
+              {isSubmitting ? t('auth.signin_loading') : t('auth.signin_btn')}
             </Button>
           </div>
         </form>

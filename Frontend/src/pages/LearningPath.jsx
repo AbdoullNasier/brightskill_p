@@ -11,7 +11,7 @@ const LearningPath = () => {
 
     const [learningPath, setLearningPath] = useState(null);
     const [activeCourse, setActiveCourse] = useState(null);
-    const [courseLessons, setCourseLessons] = useState([]);
+    const [courseModules, setCourseModules] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -24,17 +24,17 @@ const LearningPath = () => {
                 }
 
                 if (activeCourseId) {
-                    const [courseRes, lessonsRes] = await Promise.all([
-                        apiRequest(`/courses/courses/${activeCourseId}/`),
-                        apiRequest(`/courses/lessons/?course=${activeCourseId}`),
+                    const [courseRes, modulesRes] = await Promise.all([
+                        apiRequest(`/courses/${activeCourseId}/`),
+                        apiRequest(`/courses/${activeCourseId}/modules/`),
                     ]);
 
                     if (courseRes.ok) {
                         setActiveCourse(await courseRes.json());
                     }
-                    if (lessonsRes.ok) {
-                        const lessons = await lessonsRes.json();
-                        setCourseLessons(Array.isArray(lessons) ? lessons : []);
+                    if (modulesRes.ok) {
+                        const modules = await modulesRes.json();
+                        setCourseModules(Array.isArray(modules) ? modules : []);
                     }
                 }
             } finally {
@@ -67,16 +67,16 @@ const LearningPath = () => {
     const courseSteps = useMemo(() => {
         if (!activeCourse) return [];
         const percent = Number(userProgress[activeCourse.id] || 0);
-        return courseLessons.map((lesson, index) => ({
-            id: lesson.id,
-            title: lesson.title,
-            description: `Lesson ${lesson.order} in ${activeCourse.title}`,
+        return courseModules.map((module, index) => ({
+            id: module.id,
+            title: module.title,
+            description: `Module ${module.order_index} in ${activeCourse.title}`,
             reason: activeCourse.skill_name || 'Course progression',
-            status: percent >= (((index + 1) / Math.max(courseLessons.length, 1)) * 100) ? 'completed' : index === 0 ? 'in-progress' : 'locked',
+            status: percent >= (((index + 1) / Math.max(courseModules.length, 1)) * 100) ? 'completed' : index === 0 ? 'in-progress' : 'locked',
             duration: '30m',
-            type: 'lesson',
+            type: 'module',
         }));
-    }, [activeCourse, courseLessons, userProgress]);
+    }, [activeCourse, courseModules, userProgress]);
 
     const steps = aiSteps.length > 0 ? aiSteps : courseSteps;
 
@@ -155,7 +155,7 @@ const LearningPath = () => {
                                     <p className="text-gray-600 mb-6">{step.description}</p>
 
                                     {step.status !== 'locked' ? (
-                                        <Button onClick={() => navigate(`/lesson/${step.id}`)} className="w-full sm:w-auto">
+                                        <Button onClick={() => navigate(`/lesson/${activeCourseId || step.id}`)} className="w-full sm:w-auto">
                                             {step.status === 'completed' ? 'Review Module' : 'Start Module'}
                                         </Button>
                                     ) : (

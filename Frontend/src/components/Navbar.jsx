@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import logo from '../assets/Images/logo1.png';
 import { Link, useLocation } from 'react-router-dom';
 import { MdMenu, MdClose, MdLanguage, MdStar, MdFlashOn } from 'react-icons/md';
@@ -44,7 +44,7 @@ const Navbar = () => {
     let navLinks = [];
     if (!isAuthenticated) {
         navLinks = publicLinks;
-    } else if (['admin', 'super_admin'].includes(user?.role)) {
+    } else if (['admin'].includes(user?.role)) {
         navLinks = adminLinks;
     } else if (user?.role === 'tutor') {
         navLinks = tutorLinks;
@@ -59,7 +59,7 @@ const Navbar = () => {
             return (
                 <div className="flex items-center space-x-4">
                     <Link to="/login">
-                        <Button variant="ghost" className="!px-4">{t('nav.login')}</Button>
+                        <Button variant="gost" className="!px-4">{t('nav.login')}</Button>
                     </Link>
                     <Link to="/register">
                         <Button className="!px-4 text-sm">{t('nav.signup')}</Button>
