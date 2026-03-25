@@ -50,9 +50,16 @@ def detect_user_language(text: str) -> str:
 
 
 def resolve_language(user, user_message: str = "") -> str:
-    detected_lang = detect_user_language(user_message)
-    if detected_lang in SUPPORTED_LANGUAGES:
-        return detected_lang
-
     preferred_language = getattr(user, "preferred_language", None)
+    clean_message = re.sub(r"\s+", " ", str(user_message or "")).strip()
+
+    if any(hint in clean_message.lower() for hint in HAUSA_HINTS):
+        return "ha"
+
+    # Short labels like a selected skill name are poor language signals.
+    if len(clean_message) >= 20:
+        detected_lang = detect_user_language(clean_message)
+        if detected_lang in SUPPORTED_LANGUAGES:
+            return detected_lang
+
     return _normalize_language(preferred_language)

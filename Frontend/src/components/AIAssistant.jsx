@@ -7,7 +7,7 @@ import { getAI, postAI } from '../utils/aiClient';
 const LESSON_CONTEXT_STORAGE_KEY = 'brightskill_lesson_context';
 
 const AIAssistant = () => {
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user, activeCourseId, apiRequest } = useAuth();
     const { language } = useLanguage();
     const location = useLocation();
     const messagesEndRef = useRef(null);
@@ -28,6 +28,7 @@ const AIAssistant = () => {
         '/register',
         '/profile/edit',
         '/about',
+        '/ai-roleplay',
         '/privacy-policy',
         '/terms',
         '/terms-and-condition',
@@ -77,10 +78,42 @@ const AIAssistant = () => {
             }
 
             if (path.includes('/dashboard')) {
+                if (activeCourseId) {
+                    try {
+                        const response = await apiRequest(`/courses/${activeCourseId}/`);
+                        if (response.ok) {
+                            const course = await response.json();
+                            ctx = {
+                                ...ctx,
+                                active_course_id: course.id,
+                                active_course_title: course.title || '',
+                                selected_skill: course.skill_name || '',
+                            };
+                        }
+                    } catch {
+                        // ignore course context fetch errors
+                    }
+                }
                 setPageContext({ page: 'dashboard', page_context: ctx });
                 return;
             }
             if (path.includes('/skills')) {
+                if (activeCourseId) {
+                    try {
+                        const response = await apiRequest(`/courses/${activeCourseId}/`);
+                        if (response.ok) {
+                            const course = await response.json();
+                            ctx = {
+                                ...ctx,
+                                active_course_id: course.id,
+                                active_course_title: course.title || '',
+                                selected_skill: course.skill_name || '',
+                            };
+                        }
+                    } catch {
+                        // ignore course context fetch errors
+                    }
+                }
                 setPageContext({ page: 'skills', page_context: ctx });
                 return;
             }
@@ -88,7 +121,7 @@ const AIAssistant = () => {
         };
 
         syncContext();
-    }, [location.pathname]);
+    }, [location.pathname, activeCourseId, apiRequest]);
 
     useEffect(() => {
         setConversationId(null);
@@ -121,6 +154,7 @@ const AIAssistant = () => {
                 difficulty: roleplayDifficulty,
                 roadmap_stage_id: currentStage?.id,
                 scenario: currentStage?.stage_objective || `Practice ${selectedSkill}`,
+                compact_mode: true,
             });
             sessionId = start.session_id;
             setRoleplaySessionId(sessionId);
@@ -132,6 +166,7 @@ const AIAssistant = () => {
         const data = await postAI('/roleplay/message/', {
             session_id: sessionId,
             message: text,
+            compact_mode: true,
         });
         return data;
     };
@@ -152,11 +187,11 @@ const AIAssistant = () => {
             } else {
                 const data = await postAI('/fab-assist/', {
                     prompt: userText,
-                    skill: roadmapContext?.selected_skill || (language === 'HA' ? 'hausa soft skills' : 'soft skills'),
+                    skill: pageContext.page_context?.selected_skill || roadmapContext?.selected_skill || (language === 'HA' ? 'hausa soft skills' : 'soft skills'),
                     page: pageContext.page,
                     page_context: {
                         ...pageContext.page_context,
-                        selected_skill: roadmapContext?.selected_skill || '',
+                        selected_skill: pageContext.page_context?.selected_skill || roadmapContext?.selected_skill || '',
                         roadmap_stage: Array.isArray(roadmapContext?.stages)
                             ? (roadmapContext.stages.find((s) => !s.is_completed) || roadmapContext.stages[0])?.stage_title || ''
                             : '',

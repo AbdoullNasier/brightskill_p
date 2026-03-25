@@ -26,6 +26,8 @@ const LessonView = () => {
     const [activeQuiz, setActiveQuiz] = useState(null);
     const [resultMsg, setResultMsg] = useState(null);
     const [resultDetail, setResultDetail] = useState(null);
+    const [resultStatus, setResultStatus] = useState('success');
+    const [certificateReady, setCertificateReady] = useState(false);
 
     const [loading, setLoading] = useState(true);
 
@@ -134,13 +136,18 @@ const LessonView = () => {
         }
 
         if (relevantQuiz) {
+            setResultMsg(null);
+            setResultDetail(null);
+            setResultStatus('success');
             setActiveQuiz(relevantQuiz);
             setQuizModalOpen(true);
         } else {
             setActiveQuiz(null);
             if (type === 'exam') {
+                setResultStatus('error');
                 setResultMsg('No final exam is configured for this course yet.');
                 setResultDetail(null);
+                setCertificateReady(false);
                 return;
             }
             handleQuizSubmit(100);
@@ -160,7 +167,8 @@ const LessonView = () => {
                     })
                 });
                 if (!attemptResponse.ok) {
-                    throw new Error('Failed to submit quiz.');
+                    const errorData = await attemptResponse.json().catch(() => ({}));
+                    throw new Error(errorData?.detail || 'Failed to submit quiz.');
                 }
                 attemptData = await attemptResponse.json();
             }
@@ -168,8 +176,10 @@ const LessonView = () => {
             const failedQuiz = activeQuiz && attemptData && attemptData.passed === false;
             if (failedQuiz) {
                 setQuizModalOpen(false);
-                setResultMsg('Quiz not passed yet.');
-                setResultDetail(`You scored ${attemptData.score}%. Required: ${activeQuiz.pass_score}%.`);
+                setResultStatus('error');
+                setResultMsg(activeQuiz?.quiz_type === 'exam' ? 'Final exam not passed yet.' : 'Quiz not passed yet.');
+                setResultDetail(`You scored ${attemptData.score}%. Required: ${activeQuiz.pass_score}%. You can retake it now.`);
+                setCertificateReady(false);
                 return;
             }
 
@@ -190,26 +200,74 @@ const LessonView = () => {
             if (activeQuiz?.quiz_type === 'exam') {
                 const passed = Boolean(attemptData?.passed);
                 const scoreText = attemptData?.score != null ? `Score: ${attemptData.score}%` : '';
-                setResultMsg(passed ? 'Final exam passed. Course completed.' : 'Final exam submitted.');
+                await refreshProgress();
+                let courseProgress = 0;
+                let hasCertificate = Boolean(attemptData?.certificate);
+                try {
+                    const [progressResponse, certificatesResponse] = await Promise.all([
+                        apiRequest('/progress/my-progress/'),
+                        apiRequest('/certificates/'),
+                    ]);
+
+                    if (progressResponse.ok) {
+                        const progressRows = await progressResponse.json();
+                        const currentCourseProgress = Array.isArray(progressRows)
+                            ? progressRows.find((row) => Number(row.course) === Number(courseId))
+                            : null;
+                        courseProgress = Number(currentCourseProgress?.completion_percentage || 0);
+                    }
+
+                    if (certificatesResponse.ok) {
+                        const certificates = await certificatesResponse.json();
+                        hasCertificate = hasCertificate || (
+                            Array.isArray(certificates)
+                            && certificates.some((item) => Number(item.course) === Number(courseId))
+                        );
+                    }
+                } catch {
+                    // ignore post-submit lookup errors
+                }
+
+                setResultStatus(passed ? 'success' : 'error');
+                setCertificateReady(passed && hasCertificate);
+                if (passed && hasCertificate) {
+                    setResultMsg('Final exam passed. Certificate ready.');
+                } else if (passed) {
+                    setResultMsg('Final exam passed.');
+                } else {
+                    setResultMsg('Final exam not passed yet.');
+                }
                 setResultDetail(
                     [
                         scoreText,
+                        passed && !hasCertificate && courseProgress >= 100
+                            ? 'Your certificate is not available yet. Refresh and try again in a moment.'
+                            : null,
+                        passed && !hasCertificate && courseProgress < 100
+                            ? 'Your final exam is complete. If your certificate is still missing, refresh once or open the certificate page from the dashboard.'
+                            : null,
+                        !passed ? 'You can retake the final exam from this page.' : null,
                         attemptData?.book_recommendation
                             ? `AI Suggestion: ${attemptData.book_recommendation.title} by ${attemptData.book_recommendation.author}. ${attemptData.book_recommendation.reason}`
                             : null,
                     ].filter(Boolean).join(' ')
                 );
-                setTimeout(() => {
-                    if (passed && attemptData?.certificate) {
-                        navigate(`/certificate/${courseId}`);
-                        return;
-                    }
-                    refreshProgress();
-                    navigate('/dashboard');
-                }, 2000);
+                if (passed) {
+                    setTimeout(() => {
+                        if (hasCertificate) {
+                            navigate(`/certificate/${courseId}`);
+                            return;
+                        }
+                        if (courseProgress >= 100) {
+                            navigate('/dashboard');
+                        }
+                    }, 2000);
+                }
             } else {
+                setResultStatus('success');
                 setResultMsg('Module completed.');
                 setResultDetail(attemptData?.score != null ? `Quiz score: ${attemptData.score}%` : null);
+                setCertificateReady(false);
                 const currentIndex = modules.findIndex((m) => m.id === moduleItem?.id);
                 const nextModule = currentIndex >= 0 ? modules[currentIndex + 1] : null;
                 if (nextModule) {
@@ -223,7 +281,7 @@ const LessonView = () => {
 
         } catch (error) {
             console.error(error);
-            alert("Failed to record completion. Please try again.");
+            alert(error?.message || "Failed to record completion. Please try again.");
             setQuizModalOpen(false);
         }
     };
@@ -304,10 +362,45 @@ const LessonView = () => {
             </Card>
 
             {resultMsg ? (
-                <div className="flex flex-col items-center justify-center p-8 bg-green-50 rounded-xl border border-green-200">
-                    <MdCheckCircle className="text-5xl text-green-500 mb-4" />
-                    <h2 className="text-2xl font-bold text-green-800">{resultMsg}</h2>
-                    {resultDetail && <p className="text-sm text-green-900 mt-3 text-center">{resultDetail}</p>}
+                <div className={`flex flex-col items-center justify-center p-8 rounded-xl border ${
+                    resultStatus === 'error'
+                        ? 'bg-red-50 border-red-200'
+                        : 'bg-green-50 border-green-200'
+                }`}>
+                    <MdCheckCircle className={`text-5xl mb-4 ${resultStatus === 'error' ? 'text-red-500' : 'text-green-500'}`} />
+                    <h2 className={`text-2xl font-bold ${resultStatus === 'error' ? 'text-red-800' : 'text-green-800'}`}>{resultMsg}</h2>
+                    {resultDetail && (
+                        <p className={`text-sm mt-3 text-center ${resultStatus === 'error' ? 'text-red-900' : 'text-green-900'}`}>
+                            {resultDetail}
+                        </p>
+                    )}
+                    {resultStatus === 'success' && certificateReady && (
+                        <div className="mt-5 flex gap-3">
+                            <Button onClick={() => navigate(`/certificate/${courseId}`)}>
+                                View Certificate
+                            </Button>
+                            <Button variant="outline" onClick={() => navigate('/dashboard')}>
+                                Back to Dashboard
+                            </Button>
+                        </div>
+                    )}
+                    {resultStatus === 'error' && activeQuiz && (
+                        <div className="mt-5 flex gap-3">
+                            <Button onClick={() => handleTakeQuiz(activeQuiz.quiz_type === 'exam' ? 'exam' : 'module')}>
+                                {activeQuiz.quiz_type === 'exam' ? 'Retake Final Exam' : 'Retake Quiz'}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    setResultMsg(null);
+                                    setResultDetail(null);
+                                    setResultStatus('success');
+                                }}
+                            >
+                                Back to Lesson
+                            </Button>
+                        </div>
+                    )}
                 </div>
             ) : (
                 <div className="flex justify-between items-center bg-gray-50 p-6 rounded-xl border">

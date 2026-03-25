@@ -70,16 +70,14 @@ class InterviewAssessment(models.Model):
 
 class InterviewResponse(models.Model):
     assessment = models.ForeignKey(InterviewAssessment, related_name="responses", on_delete=models.CASCADE)
-    question_key = models.CharField(max_length=100)
+    sequence_order = models.PositiveIntegerField(default=1)
+    question_key = models.CharField(max_length=100, blank=True, default="")
     question_text = models.TextField()
     response_text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["id"]
-        constraints = [
-            models.UniqueConstraint(fields=["assessment", "question_key"], name="unique_question_per_assessment"),
-        ]
+        ordering = ["sequence_order", "id"]
 
 
 class LearningPath(models.Model):

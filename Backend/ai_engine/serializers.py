@@ -92,7 +92,7 @@ class LearningPathSerializer(serializers.ModelSerializer):
 class InterviewResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterviewResponse
-        fields = ["question_key", "question_text", "response_text"]
+        fields = ["sequence_order", "question_text", "response_text", "created_at"]
 
 
 class InterviewAssessmentSerializer(serializers.ModelSerializer):
@@ -142,11 +142,20 @@ class OnboardingSelectSkillSerializer(serializers.Serializer):
     selected_skill = serializers.ChoiceField(choices=SELECTABLE_SOFT_SKILLS)
 
 
-class OnboardingInterviewSerializer(serializers.Serializer):
+class InterviewStartSerializer(serializers.Serializer):
+    selected_skill = serializers.ChoiceField(choices=SELECTABLE_SOFT_SKILLS)
+
+
+class InterviewAnswerSerializer(serializers.Serializer):
     assessment_id = serializers.IntegerField()
-    question_key = serializers.CharField(max_length=120)
     question_text = serializers.CharField()
     response_text = serializers.CharField(allow_blank=False)
+
+    def validate_question_text(self, value):
+        clean = str(value).strip()
+        if not clean:
+            raise serializers.ValidationError("Question text cannot be empty.")
+        return clean
 
     def validate_response_text(self, value):
         clean = str(value).strip()
@@ -155,8 +164,16 @@ class OnboardingInterviewSerializer(serializers.Serializer):
         return clean
 
 
-class OnboardingGenerateRoadmapSerializer(serializers.Serializer):
+class InterviewFinishSerializer(serializers.Serializer):
     assessment_id = serializers.IntegerField()
+
+
+class OnboardingInterviewSerializer(InterviewAnswerSerializer):
+    pass
+
+
+class OnboardingGenerateRoadmapSerializer(InterviewFinishSerializer):
+    pass
 
 
 class RolePlayStartSerializer(serializers.Serializer):
@@ -164,12 +181,14 @@ class RolePlayStartSerializer(serializers.Serializer):
     difficulty = serializers.ChoiceField(choices=["beginner", "intermediate", "advanced"], required=False, default="intermediate")
     roadmap_stage_id = serializers.IntegerField(required=False)
     scenario = serializers.CharField(required=False, allow_blank=True, default="")
+    compact_mode = serializers.BooleanField(required=False, default=False)
 
 
 class RolePlayMessageRequestSerializer(serializers.Serializer):
     session_id = serializers.IntegerField()
     message = serializers.CharField(required=False, allow_blank=True, default="")
     end_session = serializers.BooleanField(required=False, default=False)
+    compact_mode = serializers.BooleanField(required=False, default=False)
 
 
 class RolePlayRequestSerializer(serializers.Serializer):

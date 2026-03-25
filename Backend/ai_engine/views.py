@@ -1,8 +1,10 @@
 import json
+import re
 
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Max, Q
 from django.utils import timezone
+from rest_framework.exceptions import APIException
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 
@@ -26,6 +28,9 @@ from .serializers import (
     FABRequestSerializer,
     RolePlaySessionSerializer,
     RolePlaySessionUpdateSerializer,
+    InterviewStartSerializer,
+    InterviewAnswerSerializer,
+    InterviewFinishSerializer,
     OnboardingSelectSkillSerializer,
     OnboardingInterviewSerializer,
     OnboardingGenerateRoadmapSerializer,
@@ -40,8 +45,36 @@ from .serializers import (
 from .services import ask_gemini, ask_gemini_with_context
 from .utils import resolve_language
 
-MIN_INTERVIEW_QUESTIONS = 5
-MAX_INTERVIEW_QUESTIONS = 8
+MIN_INTERVIEW_RESPONSES = 5
+MAX_INTERVIEW_RESPONSES = 8
+INTERVIEW_AI_MAX_RETRIES = 3
+INTERVIEW_DIAGNOSTIC_AREAS = [
+    "current level",
+    "main challenges",
+    "goals",
+    "confidence",
+    "habits",
+    "real-life situations",
+]
+INTERVIEW_FALLBACK_PROMPTS = {
+    "current level": "How would you describe your current {skill} level in real situations?",
+    "main challenges": "What is the hardest part of {skill} for you right now?",
+    "goals": "What would success in {skill} look like for you over the next month?",
+    "confidence": "How confident do you feel using {skill} when the pressure is high?",
+    "habits": "What habits or routines currently help or hurt your {skill} development?",
+    "real-life situations": "Tell me about a recent real-life situation where stronger {skill} would have helped you.",
+}
+AI_SERVICE_ERROR_MARKERS = (
+    "AI usage limit reached",
+    "I could not reach the AI service",
+    "AI service authentication failed",
+    "AI model configuration error",
+    "AI service not configured",
+)
+
+
+class InterviewGenerationError(Exception):
+    pass
 
 
 def _extract_json_payload(raw_text):
@@ -106,71 +139,336 @@ def _match_course_for_stage(selected_skill, stage_payload):
     return query.first()
 
 
-def _generate_first_question(selected_skill, response_language="en"):
-    prompt = (
-        "You are an adaptive onboarding interviewer for soft skills. "
-        "Return JSON only with schema "
-        '{"question_key":"...", "question_text":"..."}.\n'
-        f"Selected skill: {selected_skill}.\n"
-        "Generate the best first diagnostic question for this selected skill only."
+def _normalize_question_text(value):
+    return re.sub(r"[^a-z0-9]+", " ", str(value or "").lower()).strip()
+
+
+def _build_interview_transcript(assessment):
+    return [
+        {
+            "sequence_order": item.sequence_order,
+            "question_text": item.question_text,
+            "response_text": item.response_text,
+        }
+        for item in assessment.responses.order_by("sequence_order", "id")
+    ]
+
+
+def _extract_question_from_raw_text(raw_text):
+    text = str(raw_text or "").strip()
+    if not text:
+        return ""
+    if any(marker.lower() in text.lower() for marker in AI_SERVICE_ERROR_MARKERS):
+        return ""
+
+    lines = [line.strip(" -*\t") for line in text.splitlines() if line.strip()]
+    for line in lines:
+        if "{" in line or "}" in line:
+            continue
+        if "question_text" in line.lower() or "is_complete" in line.lower():
+            continue
+        if len(line) >= 12:
+            return line.strip(' "\'')
+    return ""
+
+
+def _build_personalized_roadmap_fallback(selected_skill, transcript):
+    responses = [row.get("response_text", "").strip() for row in transcript if row.get("response_text")]
+    latest_response = responses[-1] if responses else ""
+    first_response = responses[0] if responses else ""
+
+    summary = (
+        f"This roadmap focuses on improving {selected_skill} through structured practice, reflection, and real-world application."
     )
-    raw = ask_gemini(prompt, max_output_tokens=280, temperature=0.25, response_language=response_language)
-    payload = _extract_json_payload(raw)
-    question_text = str(payload.get("question_text", "")).strip()
-    question_key = str(payload.get("question_key", "")).strip().lower()
-
-    if not question_text:
-        question_text = f"What is your biggest challenge right now in {selected_skill} at work or school?"
-    if not question_key:
-        question_key = "primary_challenge"
-
-    return {"question_key": question_key, "question_text": question_text}
-
-
-def _generate_next_question(assessment, response_language="en"):
-    responses = list(assessment.responses.order_by("id").values("question_key", "question_text", "response_text"))
-    asked_keys = {row["question_key"] for row in responses}
-
-    if len(responses) >= MAX_INTERVIEW_QUESTIONS:
-        return {"is_complete": True}
-
-    prompt = (
-        "You are an adaptive onboarding interviewer for one selected soft skill.\n"
-        "Generate the next best follow-up question and return JSON only:\n"
-        '{"question_key":"...", "question_text":"...", "is_complete": false}\n'
-        "Rules:\n"
-        "- Focus strictly on the selected skill.\n"
-        "- Do not repeat question keys.\n"
-        "- Ask practical diagnostics for building a staged roadmap.\n"
-        "- Set is_complete=true only when enough data is gathered.\n\n"
-        f"Selected skill: {assessment.selected_skill}\n"
-        f"Already asked keys: {sorted(list(asked_keys))}\n"
-        f"Transcript: {responses}\n"
-    )
-    raw = ask_gemini(prompt, max_output_tokens=350, temperature=0.25, response_language=response_language)
-    payload = _extract_json_payload(raw)
-
-    is_complete = bool(payload.get("is_complete", False))
-    if len(responses) < MIN_INTERVIEW_QUESTIONS:
-        is_complete = False
-    if is_complete:
-        return {"is_complete": True}
-
-    question_text = str(payload.get("question_text", "")).strip()
-    question_key = str(payload.get("question_key", "")).strip().lower()
-    if not question_text or not question_key or question_key in asked_keys:
-        fallback_key = f"follow_up_{len(responses) + 1}"
-        fallback_text = (
-            f"What specific situation in {assessment.selected_skill} do you want to handle better in the next 2 weeks?"
+    if first_response or latest_response:
+        summary = (
+            f"This roadmap targets your {selected_skill} growth based on the interview themes you shared, "
+            "with extra attention on practical application, confidence building, and repeatable habits."
         )
-        return {"is_complete": False, "question_key": fallback_key, "question_text": fallback_text}
 
-    return {"is_complete": False, "question_key": question_key, "question_text": question_text}
+    stages = [
+        {
+            "stage_title": "Baseline and Awareness",
+            "stage_objective": f"Understand your current {selected_skill} strengths, weak spots, and triggers.",
+            "learner_actions": (
+                f"Review recent situations where {selected_skill} went well or poorly, and write down 3 recurring patterns."
+            ),
+            "practical_exercise": f"Complete one reflection after a real {selected_skill} moment this week.",
+            "habit_action": "Spend 10 minutes at the end of each day reviewing one interaction or decision.",
+            "course_hint": selected_skill,
+            "ai_support_note": "Ask FAB to turn your reflections into a weekly improvement checklist.",
+        },
+        {
+            "stage_title": "Guided Skill Practice",
+            "stage_objective": f"Practice {selected_skill} deliberately in lower-risk situations.",
+            "learner_actions": (
+                f"Choose 2 small weekly situations where you can intentionally apply better {selected_skill} behaviors."
+            ),
+            "practical_exercise": f"Run two short practice drills or role-plays focused on {selected_skill}.",
+            "habit_action": "Track what you planned, what you did, and what changed.",
+            "course_hint": selected_skill,
+            "ai_support_note": "Ask FAB for scenario drills tailored to your current difficulty level.",
+        },
+        {
+            "stage_title": "Real-World Application",
+            "stage_objective": f"Use {selected_skill} more effectively in meaningful real-life situations.",
+            "learner_actions": (
+                "Apply one concrete technique in a live conversation, meeting, project, or deadline-driven task each week."
+            ),
+            "practical_exercise": "Capture one real example per week and evaluate what improved.",
+            "habit_action": "Ask for brief feedback from one trusted person after an important situation.",
+            "course_hint": selected_skill,
+            "ai_support_note": "Ask FAB to review your example and suggest one sharper next move.",
+        },
+        {
+            "stage_title": "Consistency and Growth",
+            "stage_objective": f"Build reliable long-term {selected_skill} habits and measurable progress.",
+            "learner_actions": "Set one weekly target, review progress, and adjust your plan based on results.",
+            "practical_exercise": "Repeat a high-value scenario and compare your performance over time.",
+            "habit_action": "Run a weekly retrospective on wins, blockers, and the next focus area.",
+            "course_hint": selected_skill,
+            "ai_support_note": "Ask FAB for a weekly progress review and next-step recommendations.",
+        },
+    ]
+
+    return {
+        "title": f"{selected_skill.title()} Mastery Roadmap",
+        "summary": summary,
+        "stages": stages,
+    }
 
 
-def _generate_roadmap_payload(selected_skill, responses_map, response_language="en"):
+def _is_ai_service_error(text):
+    clean = str(text or "").strip().lower()
+    return any(marker.lower() in clean for marker in AI_SERVICE_ERROR_MARKERS)
+
+
+def _build_action_phrase(selected_skill, user_prompt):
+    clean = str(user_prompt or "").lower()
+    skill = (selected_skill or "communication").strip().lower() or "communication"
+
+    if any(term in clean for term in ["meeting", "presentation", "speak", "talk"]):
+        return "state your main point first, add one concrete example, and end with one clear next step"
+    if any(term in clean for term in ["confidence", "nervous", "fear", "anxious"]):
+        return "pause, slow down your first sentence, and focus on one clear message"
+    if any(term in clean for term in ["conflict", "argument", "disagreement"]):
+        return "acknowledge the other person, state your view calmly, and suggest one practical way forward"
+    if any(term in clean for term in ["time", "deadline", "late", "schedule"]):
+        return "pick one priority, block focused time, and remove one distraction before you start"
+    if any(term in clean for term in ["leader", "leadership", "team"]):
+        return "set one clear expectation, assign one next action, and confirm ownership"
+    if any(term in clean for term in ["adapt", "change", "new", "uncertain"]):
+        return "focus on what changed, what stays the same, and your next useful move"
+    if any(term in clean for term in ["emotion", "frustrated", "angry", "stress"]):
+        return "name the feeling, pause before reacting, and choose one calm response"
+    if any(term in clean for term in ["problem", "decision", "think", "critical"]):
+        return "define the problem clearly, compare two options, and choose one reasoned next step"
+
+    return {
+        "communication": "state one clear point, support it with one example, and finish with one useful question",
+        "leadership": "set one direction, clarify one priority, and check alignment",
+        "emotional intelligence": "notice the emotion, respond calmly, and choose one constructive action",
+        "critical thinking": "define the issue, test the assumption, and select one strong option",
+        "time management": "pick the top task, time-block it, and protect that block",
+        "adaptability": "identify the change, adjust your plan, and move with one practical next step",
+    }.get(skill, "take one small action, use one clear technique, and review the result")
+
+
+def _summarize_user_prompt(user_prompt):
+    clean = re.sub(r"\s+", " ", str(user_prompt or "")).strip()
+    if not clean:
+        return ""
+    return clean[:140].rstrip(" .,;:")
+
+
+def _build_fab_service_fallback(selected_skill="", user_prompt="", response_language="en"):
+    action_phrase = _build_action_phrase(selected_skill, user_prompt)
+    skill_label = (selected_skill or "your skill").strip().lower() or "your skill"
+    prompt_summary = _summarize_user_prompt(user_prompt)
+    if response_language == "ha":
+        return (
+            (
+                f"Game da wannan matsalar: \"{prompt_summary}\". Mataki na gaba shi ne ka {action_phrase}."
+                if prompt_summary
+                else f"A takaice game da {skill_label}: ka {action_phrase}."
+            )
+            + " Idan kana so, ka aika mini da takamaiman yanayi daya domin mu karya shi zuwa matakai masu sauki."
+        )
+    return (
+        (
+            f"For your situation, \"{prompt_summary}\", start with this: {action_phrase}."
+            if prompt_summary
+            else f"For {skill_label}, start with this: {action_phrase}."
+        )
+        + " If you want, send one specific situation and I will break it into simple steps."
+    )
+
+
+def _build_roleplay_service_fallback(selected_skill, user_prompt="", compact_mode=False, response_language="en"):
+    skill = (selected_skill or "communication").strip().lower() or "communication"
+    clean = str(user_prompt or "").lower()
+    if any(term in clean for term in ["meeting", "presentation", "speak", "talk"]):
+        response_core = "open with your main point, give one concrete example"
+    elif any(term in clean for term in ["conflict", "argument", "disagreement"]):
+        response_core = "acknowledge the other person, state your view calmly"
+    elif any(term in clean for term in ["confidence", "nervous", "fear", "anxious"]):
+        response_core = "slow down, speak clearly, and keep your first sentence simple"
+    elif any(term in clean for term in ["deadline", "late", "time", "schedule"]):
+        response_core = "name the priority, commit to one next step, and confirm timing"
+    else:
+        response_core = {
+            "communication": "state one clear point and support it with one example",
+            "leadership": "set one clear direction and assign one next action",
+            "emotional intelligence": "name the emotion and respond calmly",
+            "critical thinking": "define the issue and explain one sound reason",
+            "time management": "name the priority and protect the next time block",
+            "adaptability": "acknowledge the change and state one practical adjustment",
+        }.get(skill, "give one clear response and one practical example")
+    if response_language == "ha":
+        return (
+            f"Mu ci gaba da atisaye a takaice. Ka {response_core}, sannan ka rufe da tambaya daya."
+            if compact_mode
+            else f"Ci gaba da atisaye a {skill}: ka {response_core}, sannan ka rufe da tambaya daya."
+        )
+    return (
+        f"Quick practice: {response_core}, then close with one useful question."
+        if compact_mode
+        else f"Keep practicing {skill}: {response_core}, then close with one useful question."
+    )
+
+
+def _infer_covered_diagnostic_areas(transcript):
+    covered = set()
+    combined_text = " ".join(
+        f"{row.get('question_text', '')} {row.get('response_text', '')}"
+        for row in transcript
+    ).lower()
+
+    keyword_map = {
+        "current level": ["level", "beginner", "intermediate", "advanced", "current ability", "experience"],
+        "main challenges": ["challenge", "difficult", "struggle", "hard", "problem", "issue"],
+        "goals": ["goal", "want", "improve", "achieve", "target"],
+        "confidence": ["confident", "confidence", "nervous", "hesitant", "comfortable"],
+        "habits": ["habit", "routine", "practice", "prepare", "consistently"],
+        "real-life situations": ["situation", "example", "meeting", "work", "school", "project", "team", "conversation"],
+    }
+
+    for area, keywords in keyword_map.items():
+        if any(keyword in combined_text for keyword in keywords):
+            covered.add(area)
+    return covered
+
+
+def _build_fallback_interview_question(selected_skill, transcript):
+    asked_normalized = {_normalize_question_text(row["question_text"]) for row in transcript}
+    covered = _infer_covered_diagnostic_areas(transcript)
+    ordered_areas = [area for area in INTERVIEW_DIAGNOSTIC_AREAS if area not in covered] or INTERVIEW_DIAGNOSTIC_AREAS
+
+    for area in ordered_areas:
+        template = INTERVIEW_FALLBACK_PROMPTS[area]
+        question_text = template.format(skill=selected_skill).strip()
+        if _normalize_question_text(question_text) not in asked_normalized:
+            return question_text
+
+    response_count = len(transcript) + 1
+    return f"What is one specific {selected_skill} situation you want to handle better next?"
+
+
+def _build_interview_generation_prompt(selected_skill, transcript, attempt_number):
+    asked_questions = [row["question_text"] for row in transcript]
+    attempt_instruction = ""
+    if attempt_number > 1:
+        attempt_instruction = (
+            f"\nPrevious attempt {attempt_number - 1} was rejected because it was empty, invalid, repetitive, or too broad. "
+            "Produce a different and more specific result."
+        )
+
+    return (
+        "You are a precise AI interviewer for BrightSkill, a soft-skills learning platform.\n"
+        "Your job is to run a dynamic interview for exactly one selected skill and decide whether another question is needed.\n"
+        "Return JSON only with this schema:\n"
+        '{'
+        '"is_complete": false,'
+        '"question_text": "...",'
+        '"completion_reason": "...",'
+        '"coverage_summary": ["..."]'
+        "}\n"
+        "Rules:\n"
+        "- Stay strictly focused on the selected skill.\n"
+        "- Ask exactly one question when is_complete is false.\n"
+        "- The question must be concise, natural, and specific.\n"
+        "- Do not ask multi-part or compound questions.\n"
+        "- Do not repeat or paraphrase any earlier question.\n"
+        "- Use the transcript to probe missing information about current level, main challenges, goals, confidence, habits, and real-life situations.\n"
+        "- Set is_complete to true only when enough information exists to build a personalized learning path for the selected skill.\n"
+        "- When is_complete is true, leave question_text as an empty string and explain why in completion_reason.\n"
+        "- Do not mention JSON, schemas, or internal reasoning.\n"
+        f"{attempt_instruction}\n\n"
+        f"Selected skill: {selected_skill}\n"
+        f"Diagnostic areas to cover: {INTERVIEW_DIAGNOSTIC_AREAS}\n"
+        f"Questions already asked: {json.dumps(asked_questions, ensure_ascii=True)}\n"
+        f"Transcript so far: {json.dumps(transcript, ensure_ascii=True)}"
+    )
+
+
+def _request_dynamic_interview_turn(selected_skill, transcript, response_language="en"):
+    response_count = len(transcript)
+    if response_count >= MAX_INTERVIEW_RESPONSES:
+        return {"is_complete": True, "completion_reason": "Maximum interview length reached."}
+
+    asked_normalized = {_normalize_question_text(row["question_text"]) for row in transcript}
+
+    for attempt in range(1, INTERVIEW_AI_MAX_RETRIES + 1):
+        prompt = _build_interview_generation_prompt(selected_skill, transcript, attempt)
+        raw = ask_gemini(
+            prompt,
+            max_output_tokens=400,
+            temperature=0.15,
+            response_language=response_language,
+        )
+        payload = _extract_json_payload(raw)
+        if not payload:
+            plain_question = _extract_question_from_raw_text(raw)
+            normalized_plain_question = _normalize_question_text(plain_question)
+            if (
+                plain_question
+                and normalized_plain_question
+                and normalized_plain_question not in asked_normalized
+                and plain_question.count("?") <= 1
+            ):
+                return {"is_complete": False, "question_text": plain_question}
+            continue
+
+        is_complete = bool(payload.get("is_complete", False))
+        if response_count < MIN_INTERVIEW_RESPONSES:
+            is_complete = False
+        if is_complete:
+            return {
+                "is_complete": True,
+                "completion_reason": str(payload.get("completion_reason", "")).strip()
+                or "Sufficient information collected for a personalized learning path.",
+            }
+
+        question_text = str(payload.get("question_text", "")).strip()
+        normalized_question = _normalize_question_text(question_text)
+        if not question_text or not normalized_question:
+            continue
+        if normalized_question in asked_normalized:
+            continue
+        if question_text.count("?") > 1:
+            continue
+
+        return {"is_complete": False, "question_text": question_text}
+
+    if response_count >= MIN_INTERVIEW_RESPONSES:
+        return {"is_complete": True, "completion_reason": "Sufficient information collected for a personalized learning path."}
+    return {"is_complete": False, "question_text": _build_fallback_interview_question(selected_skill, transcript)}
+
+
+def _generate_roadmap_payload(selected_skill, transcript, response_language="en"):
     prompt = (
-        "You are an expert soft-skills coach. Build a practical multi-stage mastery roadmap.\n"
+        "You are an expert soft-skills coach for BrightSkill.\n"
+        "Build a practical, personalized, multi-stage learning roadmap for exactly one selected soft skill.\n"
         "Return JSON only with this exact schema:\n"
         "{"
         '"title":"...",'
@@ -188,11 +486,14 @@ def _generate_roadmap_payload(selected_skill, responses_map, response_language="
         "Rules:\n"
         "- Provide 4 to 6 stages.\n"
         "- Keep every stage tied to the selected skill only.\n"
+        "- Use the interview transcript to personalize the roadmap around the learner's level, goals, blockers, confidence, habits, and real-life situations.\n"
         "- Make actions concrete and executable.\n\n"
         f"Selected skill: {selected_skill}\n"
-        f"Interview responses: {responses_map}\n"
+        f"Interview transcript: {json.dumps(transcript, ensure_ascii=True)}\n"
     )
     raw = ask_gemini(prompt, max_output_tokens=2800, temperature=0.25, response_language=response_language)
+    if any(marker.lower() in str(raw).lower() for marker in AI_SERVICE_ERROR_MARKERS):
+        return _build_personalized_roadmap_fallback(selected_skill, transcript)
     payload = _extract_json_payload(raw)
 
     title = str(payload.get("title", "")).strip() or f"{selected_skill.title()} Mastery Roadmap"
@@ -296,6 +597,12 @@ class FABAssistView(generics.GenericAPIView):
             use_cache=True,
             response_language=language,
         )
+        if _is_ai_service_error(reply):
+            reply = _build_fab_service_fallback(
+                selected_skill=selected_skill,
+                user_prompt=prompt,
+                response_language=language,
+            )
         Message.objects.create(conversation=conversation, sender=Message.Sender.AI, content=reply)
 
         payload = {"reply": reply, "conversation_id": conversation.id}
@@ -304,26 +611,46 @@ class FABAssistView(generics.GenericAPIView):
 
 class OnboardingSelectSkillView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = OnboardingSelectSkillSerializer
+    serializer_class = InterviewStartSerializer
 
     def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
 
-        selected_skill = serializer.validated_data["selected_skill"]
-        UserSkillProfile.objects.update_or_create(
-            user=request.user,
-            defaults={"selected_skill": selected_skill, "current_stage_index": 1},
-        )
-        assessment = InterviewAssessment.objects.create(user=request.user, selected_skill=selected_skill, is_completed=False)
-        first_question = _generate_first_question(selected_skill, response_language=resolve_language(request.user, selected_skill))
+            selected_skill = serializer.validated_data["selected_skill"]
+            UserSkillProfile.objects.update_or_create(
+                user=request.user,
+                defaults={"selected_skill": selected_skill, "current_stage_index": 1},
+            )
+            assessment = InterviewAssessment.objects.create(user=request.user, selected_skill=selected_skill, is_completed=False)
+            first_turn = _request_dynamic_interview_turn(
+                selected_skill=selected_skill,
+                transcript=[],
+                response_language=resolve_language(request.user),
+            )
+        except InterviewGenerationError as exc:
+            if 'assessment' in locals():
+                assessment.delete()
+            return Response({"detail": str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except APIException:
+            if 'assessment' in locals():
+                assessment.delete()
+            raise
+        except Exception:
+            if 'assessment' in locals():
+                assessment.delete()
+            return Response(
+                {"detail": "Unable to start the interview right now."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
         return Response(
             {
                 "assessment_id": assessment.id,
                 "selected_skill": selected_skill,
-                "question": first_question,
-                "is_complete": False,
+                "question": first_turn["question_text"],
+                "is_complete": first_turn["is_complete"],
                 "skills": SELECTABLE_SOFT_SKILLS,
             },
             status=status.HTTP_201_CREATED,
@@ -332,79 +659,131 @@ class OnboardingSelectSkillView(generics.GenericAPIView):
 
 class OnboardingInterviewView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = OnboardingInterviewSerializer
+    serializer_class = InterviewAnswerSerializer
 
     @transaction.atomic
     def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
 
-        assessment = InterviewAssessment.objects.filter(
-            id=serializer.validated_data["assessment_id"],
-            user=request.user,
-        ).first()
-        if not assessment:
-            return Response({"detail": "Assessment not found."}, status=status.HTTP_404_NOT_FOUND)
-        if assessment.is_completed:
-            return Response({"detail": "Assessment already completed."}, status=status.HTTP_400_BAD_REQUEST)
+            assessment = InterviewAssessment.objects.filter(
+                id=serializer.validated_data["assessment_id"],
+                user=request.user,
+            ).first()
+            if not assessment:
+                return Response({"detail": "Assessment not found."}, status=status.HTTP_404_NOT_FOUND)
+            if assessment.is_completed:
+                return Response({"detail": "Assessment already completed."}, status=status.HTTP_400_BAD_REQUEST)
 
-        question_key = serializer.validated_data["question_key"].strip().lower()
-        if assessment.responses.filter(question_key=question_key).exists():
-            return Response({"detail": "This question is already answered."}, status=status.HTTP_400_BAD_REQUEST)
+            question_text = serializer.validated_data["question_text"].strip()
+            response_text = serializer.validated_data["response_text"].strip()
+            normalized_question = _normalize_question_text(question_text)
+            if not normalized_question:
+                return Response({"detail": "Question text is invalid."}, status=status.HTTP_400_BAD_REQUEST)
 
-        InterviewResponse.objects.create(
-            assessment=assessment,
-            question_key=question_key,
-            question_text=serializer.validated_data["question_text"].strip(),
-            response_text=serializer.validated_data["response_text"].strip(),
-        )
-
-        next_question = _generate_next_question(
-            assessment=assessment,
-            response_language=resolve_language(request.user, serializer.validated_data["response_text"]),
-        )
-        payload = {"assessment_id": assessment.id, "is_complete": next_question["is_complete"]}
-        if not next_question["is_complete"]:
-            payload["next_question"] = {
-                "question_key": next_question["question_key"],
-                "question_text": next_question["question_text"],
+            existing_questions = {
+                _normalize_question_text(item.question_text): item.sequence_order
+                for item in assessment.responses.order_by("sequence_order", "id")
             }
+            if normalized_question in existing_questions:
+                return Response({"detail": "This interview question has already been answered."}, status=status.HTTP_400_BAD_REQUEST)
+
+            next_sequence = (
+                assessment.responses.aggregate(max_sequence=Max("sequence_order")).get("max_sequence") or 0
+            ) + 1
+            InterviewResponse.objects.create(
+                assessment=assessment,
+                sequence_order=next_sequence,
+                question_text=question_text,
+                response_text=response_text,
+            )
+
+            transcript = _build_interview_transcript(assessment)
+            selected_skill = (
+                assessment.selected_skill
+                or UserSkillProfile.objects.filter(user=request.user).values_list("selected_skill", flat=True).first()
+                or "communication"
+            ).strip().lower()
+            next_turn = _request_dynamic_interview_turn(
+                selected_skill=selected_skill,
+                transcript=transcript,
+                response_language=resolve_language(request.user, response_text),
+            )
+        except InterviewGenerationError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except APIException:
+            raise
+        except Exception:
+            return Response(
+                {"detail": "Unable to process this interview answer right now."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        payload = {
+            "assessment_id": assessment.id,
+            "is_complete": next_turn["is_complete"],
+        }
+        if next_turn["is_complete"]:
+            payload["completion_reason"] = next_turn.get("completion_reason", "")
+        else:
+            payload["next_question"] = next_turn["question_text"]
         return Response(payload, status=status.HTTP_200_OK)
 
 
 class OnboardingGenerateRoadmapView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = OnboardingGenerateRoadmapSerializer
+    serializer_class = InterviewFinishSerializer
 
     @transaction.atomic
     def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
 
-        assessment = (
-            InterviewAssessment.objects.filter(id=serializer.validated_data["assessment_id"], user=request.user)
-            .prefetch_related("responses")
-            .first()
-        )
-        if not assessment:
-            return Response({"detail": "Assessment not found."}, status=status.HTTP_404_NOT_FOUND)
-        if assessment.responses.count() < MIN_INTERVIEW_QUESTIONS:
-            return Response(
-                {"detail": f"At least {MIN_INTERVIEW_QUESTIONS} answers are required."},
-                status=status.HTTP_400_BAD_REQUEST,
+            assessment = (
+                InterviewAssessment.objects.filter(id=serializer.validated_data["assessment_id"], user=request.user)
+                .prefetch_related("responses")
+                .first()
             )
+            if not assessment:
+                return Response({"detail": "Assessment not found."}, status=status.HTTP_404_NOT_FOUND)
+            if assessment.is_completed and hasattr(assessment, "roadmap"):
+                return Response(
+                    {
+                        "message": "Learning path already generated.",
+                        "assessment": InterviewAssessmentSerializer(assessment).data,
+                        "roadmap": _serialize_roadmap_with_progress(request.user, assessment.roadmap),
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            if assessment.responses.count() < MIN_INTERVIEW_RESPONSES:
+                return Response(
+                    {"detail": f"At least {MIN_INTERVIEW_RESPONSES} interview answers are required."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-        selected_skill = assessment.selected_skill or UserSkillProfile.objects.filter(user=request.user).values_list(
-            "selected_skill", flat=True
-        ).first()
-        selected_skill = (selected_skill or "communication").strip().lower()
+            selected_skill = assessment.selected_skill or UserSkillProfile.objects.filter(user=request.user).values_list(
+                "selected_skill", flat=True
+            ).first()
+            selected_skill = (selected_skill or "communication").strip().lower()
 
-        responses_map = {item.question_key: item.response_text for item in assessment.responses.order_by("id")}
-        payload = _generate_roadmap_payload(
-            selected_skill=selected_skill,
-            responses_map=responses_map,
-            response_language=resolve_language(request.user, " ".join(responses_map.values())),
-        )
+            transcript = _build_interview_transcript(assessment)
+            payload = _generate_roadmap_payload(
+                selected_skill=selected_skill,
+                transcript=transcript,
+                response_language=resolve_language(
+                    request.user,
+                    " ".join(item["response_text"] for item in transcript),
+                ),
+            )
+        except APIException:
+            raise
+        except Exception:
+            return Response(
+                {"detail": "Unable to generate the learning path right now."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
         roadmap = LearningRoadmap.objects.create(
             user=request.user,
@@ -492,6 +871,7 @@ class RolePlayStartView(generics.GenericAPIView):
 
         selected_skill = serializer.validated_data["selected_skill"]
         difficulty = serializer.validated_data.get("difficulty", "intermediate")
+        compact_mode = serializer.validated_data.get("compact_mode", False)
         stage = None
         stage_id = serializer.validated_data.get("roadmap_stage_id")
         if stage_id:
@@ -515,10 +895,27 @@ class RolePlayStartView(generics.GenericAPIView):
             f"Selected skill: {selected_skill}\n"
             f"Difficulty: {difficulty}\n"
             f"Scenario: {scenario}\n"
-            "Open with a realistic scene and one concise question to the learner."
+            + (
+                "Open with one very short realistic setup and one concise question. "
+                "Keep the full reply under 35 words."
+                if compact_mode
+                else "Open with a realistic scene and one concise question to the learner."
+            )
         )
         language = resolve_language(request.user, scenario)
-        opener = ask_gemini(opener_prompt, max_output_tokens=450, temperature=0.35, response_language=language)
+        opener = ask_gemini(
+            opener_prompt,
+            max_output_tokens=180 if compact_mode else 450,
+            temperature=0.35,
+            response_language=language,
+        )
+        if _is_ai_service_error(opener):
+            opener = _build_roleplay_service_fallback(
+                selected_skill,
+                user_prompt=scenario,
+                compact_mode=compact_mode,
+                response_language=language,
+            )
         RolePlayMessage.objects.create(session=session, role=RolePlayMessage.Role.AI, content=opener)
 
         return Response(
@@ -549,6 +946,7 @@ class RolePlayMessageView(generics.GenericAPIView):
 
         end_session = serializer.validated_data.get("end_session", False)
         message = serializer.validated_data.get("message", "").strip()
+        compact_mode = serializer.validated_data.get("compact_mode", False)
         language = resolve_language(request.user, message)
 
         if message:
@@ -562,9 +960,27 @@ class RolePlayMessageView(generics.GenericAPIView):
                 f"Selected skill: {session.selected_skill}\n"
                 f"Difficulty: {session.difficulty}\n"
                 f"Conversation history:\n{history}\n\n"
-                "Respond in-role first, then give short actionable feedback."
+                + (
+                    "Reply in a compact FAB style. Keep it under 45 words total. "
+                    "Give one natural in-role response, then one short coaching takeaway in the same reply. "
+                    "No lists, no long explanations."
+                    if compact_mode
+                    else "Respond in-role first, then give short actionable feedback."
+                )
             )
-            reply = ask_gemini(prompt, max_output_tokens=700, temperature=0.35, response_language=language)
+            reply = ask_gemini(
+                prompt,
+                max_output_tokens=220 if compact_mode else 700,
+                temperature=0.35,
+                response_language=language,
+            )
+            if _is_ai_service_error(reply):
+                reply = _build_roleplay_service_fallback(
+                    session.selected_skill,
+                    user_prompt=message,
+                    compact_mode=compact_mode,
+                    response_language=language,
+                )
             RolePlayMessage.objects.create(session=session, role=RolePlayMessage.Role.AI, content=reply)
         else:
             reply = "Please send a message to continue role-play."
@@ -676,6 +1092,12 @@ class RolePlayView(generics.GenericAPIView):
                 "Respond in-role first, then provide short actionable feedback."
             )
             reply = ask_gemini(rp_prompt, max_output_tokens=700, temperature=0.35, response_language=language)
+            if _is_ai_service_error(reply):
+                reply = _build_roleplay_service_fallback(
+                    session.selected_skill,
+                    user_prompt=prompt,
+                    response_language=language,
+                )
             RolePlayMessage.objects.create(session=session, role=RolePlayMessage.Role.AI, content=reply)
         else:
             reply = "Share your scenario and I will role-play it with you."
@@ -698,30 +1120,15 @@ class RolePlayView(generics.GenericAPIView):
 
 
 class InterviewStartView(OnboardingSelectSkillView):
-    def post(self, request):
-        data = {"selected_skill": request.data.get("selected_skill") or "communication"}
-        serializer = OnboardingSelectSkillSerializer(data=data)
-        serializer.is_valid(raise_exception=True)
-
-        selected_skill = serializer.validated_data["selected_skill"]
-        UserSkillProfile.objects.update_or_create(
-            user=request.user,
-            defaults={"selected_skill": selected_skill, "current_stage_index": 1},
-        )
-        assessment = InterviewAssessment.objects.create(user=request.user, selected_skill=selected_skill, is_completed=False)
-        first_question = _generate_first_question(selected_skill, response_language=resolve_language(request.user, selected_skill))
-        return Response(
-            {"assessment_id": assessment.id, "question": first_question, "is_complete": False},
-            status=status.HTTP_201_CREATED,
-        )
+    serializer_class = InterviewStartSerializer
 
 
 class InterviewAnswerView(OnboardingInterviewView):
-    pass
+    serializer_class = InterviewAnswerSerializer
 
 
 class InterviewFinishView(OnboardingGenerateRoadmapView):
-    pass
+    serializer_class = InterviewFinishSerializer
 
 
 class InterviewSubmitView(generics.GenericAPIView):
@@ -729,7 +1136,7 @@ class InterviewSubmitView(generics.GenericAPIView):
 
     def post(self, request):
         return Response(
-            {"detail": "Use onboarding endpoints: /onboarding/select-skill/, /onboarding/interview/, /onboarding/generate-roadmap/."},
+            {"detail": "Use /interview/start/, /interview/answer/, and /interview/finish/."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 

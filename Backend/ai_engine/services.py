@@ -48,6 +48,22 @@ OFF_TOPIC_HINTS = {
 _client = None
 
 
+def sanitize_ai_response(text: str) -> str:
+    clean = str(text or "").replace("\r\n", "\n").strip()
+    if not clean:
+        return clean
+
+    clean = re.sub(r"(?im)^\s*(ai|fodiye)\s*:\s*", "", clean)
+    clean = re.sub(r"\*+", "", clean)
+    clean = re.sub(r"(?im)^#{1,6}\s*", "", clean)
+    clean = re.sub(r"(?im)^[-•]\s*", "", clean)
+    clean = re.sub(r"(?is)\n*\s*feedback\s*:\s*.*$", "", clean)
+    clean = re.sub(r"(?is)\n*\s*clarity\s*:\s*.*$", "", clean)
+    clean = re.sub(r"(?is)\n*\s*specificity\s*:\s*.*$", "", clean)
+    clean = re.sub(r"\n{3,}", "\n\n", clean)
+    return clean.strip()
+
+
 def detect_user_language(text: str) -> str:
     clean = re.sub(r"\s+", " ", str(text or "")).strip()
     if len(clean) < 12 or detect is None:
@@ -69,6 +85,21 @@ def _build_response_language_instruction(source_text: str = "", response_languag
             "If technical words are better in English, keep them minimal and explain in Hausa."
         )
     return "Respond in clear English."
+
+
+def _build_identity_instruction(response_language: str | None = None) -> str:
+    lang = (response_language or "").strip().lower()
+    if lang == "ha":
+        return (
+            "Sunanka na dindindin Fodiye ne. "
+            "Idan mai amfani ya tambayi sunanka, ka ce sunanka Fodiye ne. "
+            "Kada ka ce sunanka AI ne, ChatGPT ne, ko kuma ba ka da suna."
+        )
+    return (
+        "Your fixed name is Fodiye. "
+        "If the user asks your name, reply that your name is Fodiye. "
+        "Never say your name is AI, ChatGPT, OpenAI, or that you do not have a name."
+    )
 
 
 def _build_generation_config(temperature=0.4, max_output_tokens=None):
@@ -122,7 +153,7 @@ def ask_gemini_with_context(
         source_text=query,
         response_language=response_language,
     )
-    full_prompt = f"{system}\n\nLanguage policy: {language_instruction}\n\nUser: {query}\nAI:"
+    full_prompt = f"{system}\n\nLanguage policy: {language_instruction}\n\nUser message: {query}\nRespond directly."
     
     result = ask_gemini(
         full_prompt,
@@ -131,6 +162,7 @@ def ask_gemini_with_context(
         source_text=query,
         response_language=response_language,
     )
+    result = sanitize_ai_response(result)
     
     if use_cache and result and not result.startswith("I could not reach"):
         cache.set(cache_key, result, timeout=3600)  # 1 hour cache
@@ -151,7 +183,7 @@ def stream_gemini_with_context(
         source_text=query,
         response_language=response_language,
     )
-    full_prompt = f"{system}\n\nLanguage policy: {language_instruction}\n\nUser: {query}\nAI:"
+    full_prompt = f"{system}\n\nLanguage policy: {language_instruction}\n\nUser message: {query}\nRespond directly."
     
     client = _get_client()
     if not client:
@@ -219,7 +251,8 @@ def ask_gemini(
         source_text=source_text,
         response_language=response_language,
     )
-    full_prompt = f"Language policy: {language_instruction}\n\n{prompt}"
+    identity_instruction = _build_identity_instruction(response_language=response_language)
+    full_prompt = f"Identity policy: {identity_instruction}\nLanguage policy: {language_instruction}\n\n{prompt}"
 
     try:
         response = client.models.generate_content(
@@ -230,7 +263,7 @@ def ask_gemini(
                 max_output_tokens=max_output_tokens,
             ),
         )
-        return (
+        return sanitize_ai_response(
             getattr(response, "text", "")
             or "I can help you improve communication, leadership, and other soft skills."
         ).strip()

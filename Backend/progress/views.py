@@ -17,7 +17,7 @@ from .serializers import (
     ModuleCompletionRequestSerializer,
     QuizAttemptRequestSerializer,
 )
-from .services import enroll_user_in_course, mark_module_complete, handle_quiz_submission
+from .services import enroll_user_in_course, mark_module_complete, handle_quiz_submission, sync_user_progress_snapshot
 
 
 class ProgressViewSet(viewsets.GenericViewSet):
@@ -67,6 +67,7 @@ class ProgressViewSet(viewsets.GenericViewSet):
 
     @action(detail=False, methods=["get"], url_path="my-progress")
     def my_progress(self, request):
+        sync_user_progress_snapshot(request.user)
         queryset = Progress.objects.filter(user=request.user).select_related("course", "course__skill")
         serializer = ProgressSerializer(queryset, many=True)
         return Response(serializer.data)
@@ -90,14 +91,28 @@ class QuizViewSet(viewsets.ModelViewSet):
         user = self.request.user
         # admins see everything
         if is_admin(user):
-            return queryset
+            filtered = queryset
         # tutors only their own course quizzes
-        if is_tutor(user):
-            return queryset.filter(course__created_by=user)
+        elif is_tutor(user):
+            filtered = queryset.filter(course__created_by=user)
         # students only see published course quizzes
-        if is_student(user):
-            return queryset.filter(course__is_published=True)
-        return queryset.none()
+        elif is_student(user):
+            filtered = queryset.filter(course__is_published=True)
+        else:
+            return queryset.none()
+
+        course_id = self.request.query_params.get("course")
+        module_id = self.request.query_params.get("module")
+        quiz_type = self.request.query_params.get("quiz_type")
+
+        if course_id:
+            filtered = filtered.filter(course_id=course_id)
+        if module_id:
+            filtered = filtered.filter(module_id=module_id)
+        if quiz_type:
+            filtered = filtered.filter(quiz_type=quiz_type)
+
+        return filtered
 
     def perform_create(self, serializer):
         user = self.request.user

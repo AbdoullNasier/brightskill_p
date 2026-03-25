@@ -60,26 +60,38 @@ const requestAI = async (method, path, payload) => {
         });
 
         let data = {};
+        let fallbackText = '';
         try {
             data = await response.json();
         } catch {
+            try {
+                fallbackText = await response.text();
+            } catch {
+                fallbackText = '';
+            }
             data = {};
         }
 
-        return { response, data };
+        return { response, data, fallbackText };
     };
 
-    let { response, data } = await run(access);
+    let { response, data, fallbackText } = await run(access);
 
     if (response.status === 401) {
         const refreshedAccess = await refreshAccessToken();
         if (refreshedAccess) {
-            ({ response, data } = await run(refreshedAccess));
+            ({ response, data, fallbackText } = await run(refreshedAccess));
         }
     }
 
     if (!response.ok) {
-        throw new Error(data?.detail || data?.error || 'AI request failed');
+        throw new Error(
+            data?.detail
+            || data?.error
+            || data?.message
+            || fallbackText
+            || `${method} ${path} failed`
+        );
     }
 
     return data;

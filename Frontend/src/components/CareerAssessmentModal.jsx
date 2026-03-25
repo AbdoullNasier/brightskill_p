@@ -20,7 +20,7 @@ const CareerAssessmentModal = ({ isOpen, onClose }) => {
     const [selectedSkill, setSelectedSkill] = useState('');
     const [assessmentId, setAssessmentId] = useState(null);
     const [questions, setQuestions] = useState([]);
-    const [responses, setResponses] = useState({});
+    const [responses, setResponses] = useState([]);
     const [result, setResult] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -32,7 +32,7 @@ const CareerAssessmentModal = ({ isOpen, onClose }) => {
         setSelectedSkill('');
         setAssessmentId(null);
         setQuestions([]);
-        setResponses({});
+        setResponses([]);
         setResult(null);
         setIsSubmitting(false);
     }, [isOpen]);
@@ -48,13 +48,14 @@ const CareerAssessmentModal = ({ isOpen, onClose }) => {
         setError('');
         setIsSubmitting(true);
         try {
-            const data = await postAI('/onboarding/select-skill/', { selected_skill: selectedSkill });
-            const firstQuestion = data?.question;
-            if (!data?.assessment_id || !firstQuestion?.question_key || !firstQuestion?.question_text) {
+            const data = await postAI('/interview/start/', { selected_skill: selectedSkill });
+            const firstQuestion = typeof data?.question === 'string' ? data.question.trim() : '';
+            if (!data?.assessment_id || !firstQuestion) {
                 throw new Error('Failed to start skill interview.');
             }
             setAssessmentId(data.assessment_id);
-            setQuestions([{ key: firstQuestion.question_key, title: firstQuestion.question_text }]);
+            setQuestions([{ title: firstQuestion }]);
+            setResponses(['']);
             setStep(0);
             setView('interview');
         } catch (err) {
@@ -66,7 +67,7 @@ const CareerAssessmentModal = ({ isOpen, onClose }) => {
 
     const handleNext = async () => {
         if (!assessmentId || !currentQuestion) return;
-        const responseText = (responses[currentQuestion.key] || '').trim();
+        const responseText = (responses[step] || '').trim();
         if (!responseText) {
             setError('Please answer before continuing.');
             return;
@@ -75,26 +76,26 @@ const CareerAssessmentModal = ({ isOpen, onClose }) => {
         setError('');
         setIsSubmitting(true);
         try {
-            const answerData = await postAI('/onboarding/interview/', {
+            const answerData = await postAI('/interview/answer/', {
                 assessment_id: assessmentId,
-                question_key: currentQuestion.key,
                 question_text: currentQuestion.title,
                 response_text: responseText,
             });
 
             if (answerData?.is_complete) {
                 setView('analyzing');
-                const roadmapData = await postAI('/onboarding/generate-roadmap/', { assessment_id: assessmentId });
+                const roadmapData = await postAI('/interview/finish/', { assessment_id: assessmentId });
                 setResult(roadmapData?.roadmap || null);
                 setView('complete');
                 return;
             }
 
-            const next = answerData?.next_question;
-            if (!next?.question_key || !next?.question_text) {
+            const nextQuestion = typeof answerData?.next_question === 'string' ? answerData.next_question.trim() : '';
+            if (!nextQuestion) {
                 throw new Error('Invalid follow-up question from server.');
             }
-            setQuestions((prev) => [...prev, { key: next.question_key, title: next.question_text }]);
+            setQuestions((prev) => [...prev, { title: nextQuestion }]);
+            setResponses((prev) => [...prev, '']);
             setStep((prev) => prev + 1);
         } catch (err) {
             setError(err.message || 'Failed to save answer.');
@@ -127,7 +128,7 @@ const CareerAssessmentModal = ({ isOpen, onClose }) => {
                 <div className={`${view === 'intro' ? 'p-6' : 'flex-1 bg-gray-50 p-6'}`}>
                     {view === 'intro' && (
                         <div>
-                            <p className="text-gray-600 mb-4">Select one soft skill to begin your personalized interview.</p>
+                            <p className="text-gray-600 mb-4">Select one soft skill to master. The interview will stay focused on that skill and ask contextual follow-up questions based on your answers.</p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
                                 {SKILLS.map((skill) => (
                                     <button
@@ -180,8 +181,14 @@ const CareerAssessmentModal = ({ isOpen, onClose }) => {
                                 <h3 className="text-lg font-bold text-gray-900 mb-4">{currentQuestion.title}</h3>
                                 <textarea
                                     rows="5"
-                                    value={responses[currentQuestion.key] || ''}
-                                    onChange={(e) => setResponses((prev) => ({ ...prev, [currentQuestion.key]: e.target.value }))}
+                                    value={responses[step] || ''}
+                                    onChange={(e) =>
+                                        setResponses((prev) => {
+                                            const next = [...prev];
+                                            next[step] = e.target.value;
+                                            return next;
+                                        })
+                                    }
                                     placeholder="Type your answer..."
                                     className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
                                 />

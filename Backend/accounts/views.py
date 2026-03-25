@@ -22,6 +22,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from core.permissions import IsPlatformAdmin
 from courses.models import Course
 from progress.models import Progress, Enrollment, ModuleCompletion
+from progress.services import sync_user_progress_snapshot
 from certificates.models import Certificate
 from ai_engine.models import LearningPath
 from .models import TutorApplication
@@ -449,6 +450,7 @@ class UserDashboardView(generics.GenericAPIView):
 
     def get(self, request):
         user = request.user
+        sync_user_progress_snapshot(user)
         progress_qs = Progress.objects.filter(user=user).select_related("course")
         completed_courses = progress_qs.filter(completion_percentage=100).count()
         total_lessons_completed = ModuleCompletion.objects.filter(user=user).count()
@@ -467,15 +469,23 @@ class UserDashboardView(generics.GenericAPIView):
             has_learning_path=has_learning_path,
         )
 
-        active_progress = progress_qs.exclude(completion_percentage=100).order_by("-last_updated").first()
+        latest_progress = progress_qs.order_by("-last_updated").first()
         continue_learning = None
-        if active_progress:
+        if latest_progress:
             continue_learning = {
-                "course_id": active_progress.course_id,
-                "course_title": active_progress.course.title,
-                "difficulty": active_progress.course.difficulty,
-                "completion_percentage": float(active_progress.completion_percentage),
+                "course_id": latest_progress.course_id,
+                "course_title": latest_progress.course.title,
+                "difficulty": latest_progress.course.difficulty,
+                "completion_percentage": float(latest_progress.completion_percentage),
+                "is_completed": float(latest_progress.completion_percentage) >= 100.0,
+                "has_certificate": Certificate.objects.filter(user=user, course_id=latest_progress.course_id).exists(),
             }
+
+        recent_completed_modules = list(
+            ModuleCompletion.objects.filter(user=user)
+            .select_related("module", "module__course")
+            .order_by("-completed_at")[:5]
+        )
 
         return Response(
             {
@@ -488,6 +498,15 @@ class UserDashboardView(generics.GenericAPIView):
                     "lessons_completed": total_lessons_completed,
                 },
                 "continue_learning": continue_learning,
+                "recent_completed_modules": [
+                    {
+                        "module_id": item.module_id,
+                        "module_title": item.module.title,
+                        "course_id": item.module.course_id,
+                        "course_title": item.module.course.title,
+                    }
+                    for item in recent_completed_modules
+                ],
                 "has_learning_path": has_learning_path,
                 "badges": badges,
             }

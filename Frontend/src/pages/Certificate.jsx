@@ -6,7 +6,7 @@ import { MdDownload, MdArrowBack } from 'react-icons/md';
 import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
 
-import logo from '../assets/images/logo1.png';
+import logo from '../assets/Images/logo1.png';
 
 const Certificate = () => {
     const navigate = useNavigate();
@@ -16,6 +16,8 @@ const Certificate = () => {
     const [certificate, setCertificate] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [downloadError, setDownloadError] = useState('');
+    const [isDownloading, setIsDownloading] = useState(false);
 
     useEffect(() => {
         const loadCertificate = async () => {
@@ -66,23 +68,31 @@ const Certificate = () => {
         if (!element || !certificate) return;
 
         try {
+            setDownloadError('');
+            setIsDownloading(true);
             const canvas = await html2canvas(element, {
-                scale: 2, // Higher quality
+                scale: 2,
                 useCORS: true,
-                logging: false
+                backgroundColor: '#ffffff',
+                logging: false,
             });
 
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF({
                 orientation: 'landscape',
-                unit: 'px',
-                format: [canvas.width, canvas.height]
+                unit: 'mm',
+                format: 'a4',
             });
 
-            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
             pdf.save(`BrightSkill_Certificate_${courseName.replace(/\s+/g, '_')}.pdf`);
         } catch (error) {
             console.error("Certificate generation failed", error);
+            setDownloadError('Certificate download failed. Please try again.');
+        } finally {
+            setIsDownloading(false);
         }
     };
 
@@ -113,19 +123,21 @@ const Certificate = () => {
                 </Button>
                 <Button
                     onClick={handleDownload}
+                    disabled={isDownloading}
                     className="flex items-center"
                 >
-                    <MdDownload className="mr-2" /> Download PDF
+                    <MdDownload className="mr-2" /> {isDownloading ? 'Preparing PDF...' : 'Download PDF'}
                 </Button>
             </div>
+            {downloadError && (
+                <p className="mb-4 text-sm text-red-600">{downloadError}</p>
+            )}
 
-            {/* Certificate Template */}
             <div
                 ref={certificateRef}
                 className="bg-white text-center p-12 shadow-2xl relative w-[800px] h-[600px] flex flex-col items-center justify-center border-[20px] border-double border-primary/20"
-                style={{ fontFamily: "'Playfair Display', serif" }} // Ideally add a nice font in index.html
+                style={{ fontFamily: "'Playfair Display', serif" }}
             >
-                {/* Decorative Corner */}
                 <div className="absolute top-4 left-4 w-16 h-16 border-t-4 border-l-4 border-primary"></div>
                 <div className="absolute top-4 right-4 w-16 h-16 border-t-4 border-r-4 border-primary"></div>
                 <div className="absolute bottom-4 left-4 w-16 h-16 border-b-4 border-l-4 border-primary"></div>
@@ -158,8 +170,7 @@ const Certificate = () => {
                         <span className="text-sm text-gray-500 mt-2">Date</span>
                     </div>
 
-                    {/* Seal */}
-                    <div className="w-24 h-24 rounded-full border-4 border-primary text-primary flex items-center justify-center font-bold text-xs uppercase tracking-widest transform rotate-[-15deg] shadow-lg bg-yellow-50">
+                    <div className="w-24 h-24 rounded-full border-4 border-primary text-primary flex items-center justify-center font-bold text-xs uppercase tracking-widest transform rotate-[-20deg] shadow-lg bg-yellow-50">
                         BrightSkill Certified
                     </div>
 
@@ -170,7 +181,7 @@ const Certificate = () => {
                     </div>
                 </div>
 
-                <p className="absolute bottom-6 text-xs tracking-wide text-gray-500">
+                <p className="absolute top-6 right-6 text-xs tracking-wide text-gray-500">
                     Certificate ID: {certificate?.certificate_id}
                 </p>
             </div>
