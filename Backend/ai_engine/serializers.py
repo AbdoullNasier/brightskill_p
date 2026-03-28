@@ -100,7 +100,7 @@ class InterviewAssessmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InterviewAssessment
-        fields = ["id", "user", "selected_skill", "is_completed", "created_at", "responses"]
+        fields = ["id", "user", "selected_skill", "interview_language", "is_completed", "created_at", "responses"]
 
 
 class RoadmapStageSerializer(serializers.ModelSerializer):

@@ -55,7 +55,7 @@ const Dashboard = () => {
         };
 
         loadDashboard();
-    }, [user?.id, refreshGamification]);
+    }, [user?.id, refreshGamification, apiRequest]);
 
     const handleCloseModal = () => setShowCareerModal(false);
 
@@ -111,7 +111,7 @@ const Dashboard = () => {
                         <MdBook size={24} />
                     </div>
                     <div>
-                        <p className="text-sm text-gray-500">{t('dash.modules_done')}</p>
+                        <p className="text-sm text-gray-500">{t('dash.courses_done')}</p>
                         <p className="text-xl font-bold">{stats.completed_courses}</p>
                     </div>
                 </Card>

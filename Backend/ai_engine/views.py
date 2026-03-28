@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from books.services import create_book_recommendation
 from courses.models import Course
 from progress.models import ModuleCompletion
+from .services import ask_gemini_with_context
 from .models import (
     Conversation,
     Message,
@@ -42,7 +43,7 @@ from .serializers import (
     LearningPathSerializer,
     SELECTABLE_SOFT_SKILLS,
 )
-from .services import ask_gemini, ask_gemini_with_context
+from .services import ask_gemini
 from .utils import resolve_language
 
 MIN_INTERVIEW_RESPONSES = 5
@@ -70,7 +71,37 @@ AI_SERVICE_ERROR_MARKERS = (
     "AI service authentication failed",
     "AI model configuration error",
     "AI service not configured",
+    "The AI is busy right now",
+    "I’m having trouble reaching the AI right now",
+    "I'm having trouble reaching the AI right now",
 )
+# INTERVIEW_AI_MAX_RETRIES = 3
+# INTERVIEW_DIAGNOSTIC_AREAS = [
+#     "current level",
+#     "main challenges",
+#     "goals",
+#     "confidence",
+#     "habits",
+#     "real-life situations",
+# ]
+# INTERVIEW_FALLBACK_PROMPTS = {
+#     "current level": "How would you describe your current {skill} level in real situations?",
+#     "main challenges": "What is the hardest part of {skill} for you right now?",
+#     "goals": "What would success in {skill} look like for you over the next month?",
+#     "confidence": "How confident do you feel using {skill} when the pressure is high?",
+#     "habits": "What habits or routines currently help or hurt your {skill} development?",
+#     "real-life situations": "Tell me about a recent real-life situation where stronger {skill} would have helped you.",
+# }
+# AI_SERVICE_ERROR_MARKERS = (
+#     "AI usage limit reached",
+#     "I could not reach the AI service",
+#     "AI service authentication failed",
+#     "AI model configuration error",
+#     "AI service not configured",
+#     "The AI is busy right now",
+#     "I’m having trouble reaching the AI right now",
+#     "I'm having trouble reaching the AI right now",
+# )
 
 
 class InterviewGenerationError(Exception):
@@ -243,98 +274,210 @@ def _is_ai_service_error(text):
     return any(marker.lower() in clean for marker in AI_SERVICE_ERROR_MARKERS)
 
 
-def _build_action_phrase(selected_skill, user_prompt):
-    clean = str(user_prompt or "").lower()
-    skill = (selected_skill or "communication").strip().lower() or "communication"
-
-    if any(term in clean for term in ["meeting", "presentation", "speak", "talk"]):
-        return "state your main point first, add one concrete example, and end with one clear next step"
-    if any(term in clean for term in ["confidence", "nervous", "fear", "anxious"]):
-        return "pause, slow down your first sentence, and focus on one clear message"
-    if any(term in clean for term in ["conflict", "argument", "disagreement"]):
-        return "acknowledge the other person, state your view calmly, and suggest one practical way forward"
-    if any(term in clean for term in ["time", "deadline", "late", "schedule"]):
-        return "pick one priority, block focused time, and remove one distraction before you start"
-    if any(term in clean for term in ["leader", "leadership", "team"]):
-        return "set one clear expectation, assign one next action, and confirm ownership"
-    if any(term in clean for term in ["adapt", "change", "new", "uncertain"]):
-        return "focus on what changed, what stays the same, and your next useful move"
-    if any(term in clean for term in ["emotion", "frustrated", "angry", "stress"]):
-        return "name the feeling, pause before reacting, and choose one calm response"
-    if any(term in clean for term in ["problem", "decision", "think", "critical"]):
-        return "define the problem clearly, compare two options, and choose one reasoned next step"
-
-    return {
-        "communication": "state one clear point, support it with one example, and finish with one useful question",
-        "leadership": "set one direction, clarify one priority, and check alignment",
-        "emotional intelligence": "notice the emotion, respond calmly, and choose one constructive action",
-        "critical thinking": "define the issue, test the assumption, and select one strong option",
-        "time management": "pick the top task, time-block it, and protect that block",
-        "adaptability": "identify the change, adjust your plan, and move with one practical next step",
-    }.get(skill, "take one small action, use one clear technique, and review the result")
+def _build_ai_service_unavailable_payload(detail_message, base_message, **extra):
+    payload = {"detail": base_message, **extra}
+    return payload
 
 
-def _summarize_user_prompt(user_prompt):
-    clean = re.sub(r"\s+", " ", str(user_prompt or "")).strip()
-    if not clean:
-        return ""
-    return clean[:140].rstrip(" .,;:")
+def _build_fab_primary_prompt(prompt, selected_skill, page, compact_context, response_language):
+    page = (page or "general").strip().lower()
+    compact_context = compact_context or {}
 
+    if page == "dashboard":
+        page_instruction_en = (
+            "The user is on the dashboard. Use the context to explain visible progress, roadmap state, "
+            "XP, completed modules, widgets, recommendations, and the most useful next step."
+        )
+        page_instruction_ha = (
+            "Mai amfani yana dashboard. Ka yi amfani da context wajen bayyana progress, matsayin roadmap, "
+            "XP, modules da aka kammala, widgets, recommendations, da mataki mafi amfani na gaba."
+        )
 
-def _build_fab_service_fallback(selected_skill="", user_prompt="", response_language="en"):
-    action_phrase = _build_action_phrase(selected_skill, user_prompt)
-    skill_label = (selected_skill or "your skill").strip().lower() or "your skill"
-    prompt_summary = _summarize_user_prompt(user_prompt)
-    if response_language == "ha":
-        return (
-            (
-                f"Game da wannan matsalar: \"{prompt_summary}\". Mataki na gaba shi ne ka {action_phrase}."
-                if prompt_summary
-                else f"A takaice game da {skill_label}: ka {action_phrase}."
+    elif page == "lesson":
+        lesson_mode = str(compact_context.get("lesson_mode", "content")).strip().lower()
+
+        if lesson_mode == "quiz":
+            page_instruction_en = (
+                "The user is on the lesson page and currently viewing the quiz popup. "
+                "Focus on the current lesson, the quiz context, question understanding, and concept clarification. "
+                "Give hints only. Never reveal direct answers."
             )
-            + " Idan kana so, ka aika mini da takamaiman yanayi daya domin mu karya shi zuwa matakai masu sauki."
-        )
-    return (
-        (
-            f"For your situation, \"{prompt_summary}\", start with this: {action_phrase}."
-            if prompt_summary
-            else f"For {skill_label}, start with this: {action_phrase}."
-        )
-        + " If you want, send one specific situation and I will break it into simple steps."
-    )
+            page_instruction_ha = (
+                "Mai amfani yana shafin lesson kuma yanzu yana kallon popup na quiz. "
+                "Ka fi mayar da hankali kan lesson na yanzu, context na quiz, fahimtar tambaya, da bayanin concept. "
+                "Ka bada hint kawai. Kada ka bada amsa kai tsaye."
+            )
+        elif lesson_mode == "exam":
+            page_instruction_en = (
+                "The user is on the lesson page and currently viewing the exam popup. "
+                "Focus on exam context, concept clarification, confidence support, and revision guidance. "
+                "Do not reveal direct answers."
+            )
+            page_instruction_ha = (
+                "Mai amfani yana shafin lesson kuma yanzu yana kallon popup na exam. "
+                "Ka fi mayar da hankali kan context na exam, bayanin concept, taimakon kwarin gwiwa, da revision guidance. "
+                "Kada ka bada amsa kai tsaye."
+            )
+        else:
+            page_instruction_en = (
+                "The user is on a lesson page. Focus on the current course, module, lesson content, learning objective, "
+                "and how this lesson connects to the selected skill."
+            )
+            page_instruction_ha = (
+                "Mai amfani yana shafin lesson. Ka fi mayar da hankali kan course na yanzu, module, abun cikin lesson, "
+                "manufar koyon, da yadda lesson din ke hade da skill din da aka zaba."
+            )
 
+    elif page == "roadmap":
+        page_instruction_en = (
+            "The user is on the roadmap page. Focus on the current stage, stage objective, learner actions, "
+            "practical exercise, habit action, and what they should do next."
+        )
+        page_instruction_ha = (
+            "Mai amfani yana shafin roadmap. Ka fi mayar da hankali kan stage na yanzu, manufar stage, learner actions, "
+            "practical exercise, habit action, da abin da ya kamata ya yi na gaba."
+        )
 
-def _build_roleplay_service_fallback(selected_skill, user_prompt="", compact_mode=False, response_language="en"):
-    skill = (selected_skill or "communication").strip().lower() or "communication"
-    clean = str(user_prompt or "").lower()
-    if any(term in clean for term in ["meeting", "presentation", "speak", "talk"]):
-        response_core = "open with your main point, give one concrete example"
-    elif any(term in clean for term in ["conflict", "argument", "disagreement"]):
-        response_core = "acknowledge the other person, state your view calmly"
-    elif any(term in clean for term in ["confidence", "nervous", "fear", "anxious"]):
-        response_core = "slow down, speak clearly, and keep your first sentence simple"
-    elif any(term in clean for term in ["deadline", "late", "time", "schedule"]):
-        response_core = "name the priority, commit to one next step, and confirm timing"
+    elif page == "roleplay":
+        page_instruction_en = (
+            "The user is on the role-play page. Focus on the scenario, selected skill, current stage, "
+            "and how the user can practice effectively in this simulation."
+        )
+        page_instruction_ha = (
+            "Mai amfani yana shafin role-play. Ka fi mayar da hankali kan scenario, selected skill, current stage, "
+            "da yadda zai yi atisaye yadda ya dace a wannan simulation."
+        )
+
     else:
-        response_core = {
-            "communication": "state one clear point and support it with one example",
-            "leadership": "set one clear direction and assign one next action",
-            "emotional intelligence": "name the emotion and respond calmly",
-            "critical thinking": "define the issue and explain one sound reason",
-            "time management": "name the priority and protect the next time block",
-            "adaptability": "acknowledge the change and state one practical adjustment",
-        }.get(skill, "give one clear response and one practical example")
+        page_instruction_en = (
+            "Use the page context as the visible interface state and answer based on what the user is currently seeing."
+        )
+        page_instruction_ha = (
+            "Yi amfani da page context a matsayin abin da ke bayyane a interface, kuma ka amsa bisa abin da mai amfani yake gani yanzu."
+        )
+
     if response_language == "ha":
         return (
-            f"Mu ci gaba da atisaye a takaice. Ka {response_core}, sannan ka rufe da tambaya daya."
-            if compact_mode
-            else f"Ci gaba da atisaye a {skill}: ka {response_core}, sannan ka rufe da tambaya daya."
+            "Kai ne BrightSkill AI assistant.\n"
+            "Ka amsa kai tsaye ga sakon mai amfani cikin Hausa mai sauki.\n"
+            "Ka yi amfani da page context a matsayin abin da ke bayyane a interface yanzu.\n"
+            "Idan mai amfani ya tambayi abin da yake gani a page, ka yi bayani bisa context da aka ba ka.\n"
+            "Kada ka yi amsa mai janar idan context ya nuna cikakken abin da ke shafin.\n"
+            "Kada ka yi amfani da salon amsa mai maimaituwa.\n"
+            "Ka zama mai amfani, takamaimai, kuma mai fahimtar page.\n"
+            f"Umarnin page: {page_instruction_ha}\n\n"
+            f"Page: {page}\n"
+            f"Selected skill: {selected_skill}\n"
+            f"Visible interface context: {json.dumps(compact_context, ensure_ascii=False)}\n"
+            f"User message: {prompt}"
         )
+
     return (
-        f"Quick practice: {response_core}, then close with one useful question."
-        if compact_mode
-        else f"Keep practicing {skill}: {response_core}, then close with one useful question."
+        "You are the BrightSkill AI assistant.\n"
+        "Reply directly to the user's actual message in natural English.\n"
+        "Treat the page context as the visible interface state.\n"
+        "If the user asks about what is on the page, explain it using the provided context.\n"
+        "If context contains progress, roadmap, lesson, quiz, exam, metrics, modules, widgets, or actions, use them directly.\n"
+        "Do not give generic answers when page context clearly contains relevant interface information.\n"
+        "Do not use repetitive coaching templates or filler.\n"
+        "Be specific, page-aware, and useful.\n"
+        f"Page instruction: {page_instruction_en}\n\n"
+        f"Page: {page}\n"
+        f"Selected skill: {selected_skill}\n"
+        f"Visible interface context: {json.dumps(compact_context, ensure_ascii=False)}\n"
+        f"User message: {prompt}"
     )
+
+
+def _compact_prompt_value(value, max_length=300):
+    if value in (None, "", [], {}, ()):
+        return ""
+    if isinstance(value, (list, tuple, set)):
+        items = []
+        for item in list(value)[:4]:
+            item_text = _compact_prompt_value(item, max_length=120)
+            if item_text:
+                items.append(item_text)
+        return ", ".join(items)[:max_length].rstrip(" ,")
+    if isinstance(value, dict):
+        pairs = []
+        for key, item in list(value.items())[:4]:
+            item_text = _compact_prompt_value(item, max_length=120)
+            if item_text:
+                pairs.append(f"{key}: {item_text}")
+        return "; ".join(pairs)[:max_length].rstrip(" ;")
+    clean = re.sub(r"\s+", " ", str(value)).strip()
+    return clean[:max_length].rstrip(" .,;:")
+
+
+def _build_fab_page_context(page, selected_skill, enriched_context):
+    compact_context = {}
+    for key, value in (enriched_context or {}).items():
+        compact_value = _compact_prompt_value(value)
+        if compact_value:
+            compact_context[key] = compact_value
+    compact_context["selected_skill"] = selected_skill
+    compact_context["page"] = page
+    return compact_context
+
+
+def _build_fab_retry_prompt(prompt, selected_skill, page, compact_context, response_language):
+    if response_language == "ha":
+        return (
+            "Kai ne BrightSkill AI assistant.\n"
+            "Ka yi amfani da page context a matsayin abin da ke bayyane a interface.\n"
+            "Ka amsa sakon mai amfani kai tsaye da Hausa mai sauki.\n"
+            "Ka fi mayar da hankali kan abin da ke shafin yanzu.\n"
+            "Kada ka yi amfani da amsa mai janar ko mai maimaituwa.\n\n"
+            f"Page: {page}\n"
+            f"Selected skill: {selected_skill}\n"
+            f"Visible interface context: {json.dumps(compact_context, ensure_ascii=False)}\n"
+            f"User message: {prompt}"
+        )
+
+    return (
+        "You are the BrightSkill AI assistant.\n"
+        "Use the page context as the visible interface state.\n"
+        "Reply directly in clear English.\n"
+        "Focus on what is actually on the page right now.\n"
+        "Do not use generic or repetitive coaching language.\n\n"
+        f"Page: {page}\n"
+        f"Selected skill: {selected_skill}\n"
+        f"Visible interface context: {json.dumps(compact_context, ensure_ascii=False)}\n"
+        f"User message: {prompt}"
+    )
+
+# def _build_roleplay_service_fallback(selected_skill, user_prompt="", compact_mode=False, response_language="en"):
+#     skill = (selected_skill or "communication").strip().lower() or "communication"
+#     clean = str(user_prompt or "").lower()
+#     if any(term in clean for term in ["meeting", "presentation", "speak", "talk"]):
+#         response_core = "open with your main point, give one concrete example"
+#     elif any(term in clean for term in ["conflict", "argument", "disagreement"]):
+#         response_core = "acknowledge the other person, state your view calmly"
+#     elif any(term in clean for term in ["confidence", "nervous", "fear", "anxious"]):
+#         response_core = "slow down, speak clearly, and keep your first sentence simple"
+#     elif any(term in clean for term in ["deadline", "late", "time", "schedule"]):
+#         response_core = "name the priority, commit to one next step, and confirm timing"
+#     else:
+#         response_core = {
+#             "communication": "state one clear point and support it with one example",
+#             "leadership": "set one clear direction and assign one next action",
+#             "emotional intelligence": "name the emotion and respond calmly",
+#             "critical thinking": "define the issue and explain one sound reason",
+#             "time management": "name the priority and protect the next time block",
+#             "adaptability": "acknowledge the change and state one practical adjustment",
+#         }.get(skill, "give one clear response and one practical example")
+#     if response_language == "ha":
+#         return (
+#             f"Mu ci gaba da atisaye a takaice. Ka {response_core}, sannan ka rufe da tambaya daya."
+#             if compact_mode
+#             else f"Ci gaba da atisaye a {skill}: ka {response_core}, sannan ka rufe da tambaya daya."
+#         )
+#     return (
+#         f"Quick practice: {response_core}, then close with one useful question."
+#         if compact_mode
+#         else f"Keep practicing {skill}: {response_core}, then close with one useful question."
+#     )
 
 
 def _infer_covered_diagnostic_areas(transcript):
@@ -422,7 +565,7 @@ def _request_dynamic_interview_turn(selected_skill, transcript, response_languag
         prompt = _build_interview_generation_prompt(selected_skill, transcript, attempt)
         raw = ask_gemini(
             prompt,
-            max_output_tokens=400,
+            max_output_tokens=200,
             temperature=0.15,
             response_language=response_language,
         )
@@ -567,18 +710,20 @@ class FABAssistView(generics.GenericAPIView):
 
         enriched_context = {
             **(page_context or {}),
+            "lesson_mode": (page_context or {}).get("lesson_mode", ""),
             "selected_skill": selected_skill,
             "current_stage": current_stage.stage_title if current_stage else "",
+            "current_stage_objective": current_stage.stage_objective if current_stage else "",
+            "current_stage_actions": current_stage.learner_actions if current_stage else "",
+            "current_stage_practical_exercise": current_stage.practical_exercise if current_stage else "",
+            "roadmap_title": roadmap.title if roadmap else "",
+            "total_roadmap_stages": roadmap.stages.count() if roadmap else 0,
             "roadmap_tasks": [
                 stage.habit_action for stage in (roadmap.stages.all() if roadmap else []) if stage.habit_action
             ][:6],
             "completed_modules_count": ModuleCompletion.objects.filter(user=request.user).count(),
         }
-
-        try:
-            ai_context = AIContext(page)
-        except Exception:
-            ai_context = AIContext.GENERAL
+        compact_context = _build_fab_page_context(page, selected_skill, enriched_context)
 
         conversation = None
         if conversation_id:
@@ -587,21 +732,30 @@ class FABAssistView(generics.GenericAPIView):
             conversation = Conversation.objects.create(user=request.user, skill=selected_skill)
 
         Message.objects.create(conversation=conversation, sender=Message.Sender.USER, content=prompt)
+        try:
+            context_enum = AIContext(page)
+        except ValueError:
+            context_enum = AIContext.GENERAL
+        
         reply = ask_gemini_with_context(
             query=prompt,
-            context=ai_context,
-            page_data=enriched_context,
+            context=context_enum,
+            page_data=compact_context,
             user_id=request.user.id,
-            max_tokens=900,
-            temperature=0.3,
+            max_tokens=320,
+            temperature=0.35,
             use_cache=True,
             response_language=language,
         )
         if _is_ai_service_error(reply):
-            reply = _build_fab_service_fallback(
-                selected_skill=selected_skill,
-                user_prompt=prompt,
-                response_language=language,
+            print(f"FABAssistView AI error: {reply}")
+            return Response(
+                _build_ai_service_unavailable_payload(
+                    reply,
+                    "The BrightSkill AI assistant is unavailable right now. Please try again shortly.",
+                    conversation_id=conversation.id,
+                ),
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
         Message.objects.create(conversation=conversation, sender=Message.Sender.AI, content=reply)
 
@@ -879,9 +1033,9 @@ class RolePlayStartView(generics.GenericAPIView):
 
         scenario = serializer.validated_data.get("scenario", "").strip()
         if not scenario:
-            scenario = f"Practice {selected_skill} in a realistic workplace situation."
+            scenario = f"Practice {selected_skill or 'soft skills'} in a realistic workplace situation."
 
-        title = f"{selected_skill.title()} role-play ({difficulty})"
+        title = f"{(selected_skill or 'soft skills').title()} role-play ({difficulty})"
         session = RolePlaySession.objects.create(
             user=request.user,
             title=title[:140],
@@ -892,7 +1046,7 @@ class RolePlayStartView(generics.GenericAPIView):
 
         opener_prompt = (
             "You are an AI role-play partner for soft skills practice.\n"
-            f"Selected skill: {selected_skill}\n"
+            f"Selected skill: {selected_skill or 'soft skills (general)'}\n"
             f"Difficulty: {difficulty}\n"
             f"Scenario: {scenario}\n"
             + (
@@ -910,11 +1064,13 @@ class RolePlayStartView(generics.GenericAPIView):
             response_language=language,
         )
         if _is_ai_service_error(opener):
-            opener = _build_roleplay_service_fallback(
-                selected_skill,
-                user_prompt=scenario,
-                compact_mode=compact_mode,
-                response_language=language,
+            print(f"RolePlayStartView AI error: {opener}")
+            return Response(
+                _build_ai_service_unavailable_payload(
+                    opener,
+                    "The AI role-play service is unavailable right now.",
+                ),
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
         RolePlayMessage.objects.create(session=session, role=RolePlayMessage.Role.AI, content=opener)
 
@@ -956,16 +1112,19 @@ class RolePlayMessageView(generics.GenericAPIView):
             history = "\n".join([f"{row.role}: {row.content}" for row in history_rows])
 
             prompt = (
-                "You are an AI role-play partner and soft-skills coach.\n"
+                "You are an AI role-play partner.\n"
                 f"Selected skill: {session.selected_skill}\n"
                 f"Difficulty: {session.difficulty}\n"
                 f"Conversation history:\n{history}\n\n"
                 + (
-                    "Reply in a compact FAB style. Keep it under 45 words total. "
-                    "Give one natural in-role response, then one short coaching takeaway in the same reply. "
-                    "No lists, no long explanations."
+                    "Stay fully in character and reply naturally as the other participant in the scenario. "
+                    "Keep it under 45 words total. Ask at most one concise follow-up question. "
+                    "No coaching, no feedback, no long explanations."
                     if compact_mode
-                    else "Respond in-role first, then give short actionable feedback."
+                    else (
+                        "Stay fully in character and respond like the other participant in the scenario. "
+                        "Do not give coaching, tips, or feedback unless the user explicitly asks for it."
+                    )
                 )
             )
             reply = ask_gemini(
@@ -975,11 +1134,14 @@ class RolePlayMessageView(generics.GenericAPIView):
                 response_language=language,
             )
             if _is_ai_service_error(reply):
-                reply = _build_roleplay_service_fallback(
-                    session.selected_skill,
-                    user_prompt=message,
-                    compact_mode=compact_mode,
-                    response_language=language,
+                print(f"RolePlayMessageView AI error: {reply}")
+                return Response(
+                    _build_ai_service_unavailable_payload(
+                        reply,
+                        "The AI role-play service is unavailable right now.",
+                        session_id=session.id,
+                    ),
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
                 )
             RolePlayMessage.objects.create(session=session, role=RolePlayMessage.Role.AI, content=reply)
         else:
@@ -1063,20 +1225,15 @@ class RolePlayView(generics.GenericAPIView):
         if session_id:
             session = RolePlaySession.objects.filter(id=session_id, user=request.user).first()
         if not session:
-            skill = context.get("selected_skill") or "communication"
+            raw_skill = str(context.get("selected_skill") or "").strip().lower()
+            skill = raw_skill if raw_skill in SELECTABLE_SOFT_SKILLS else ""
             difficulty = context.get("difficulty") or "intermediate"
-            start_payload = {
-                "selected_skill": skill if skill in SELECTABLE_SOFT_SKILLS else "communication",
-                "difficulty": difficulty if difficulty in {"beginner", "intermediate", "advanced"} else "intermediate",
-                "scenario": scenario or "",
-            }
-            start_serializer = RolePlayStartSerializer(data=start_payload)
-            start_serializer.is_valid(raise_exception=True)
+            normalized_difficulty = difficulty if difficulty in {"beginner", "intermediate", "advanced"} else "intermediate"
             session = RolePlaySession.objects.create(
                 user=request.user,
-                title=f"{start_payload['selected_skill'].title()} role-play ({start_payload['difficulty']})"[:140],
-                selected_skill=start_payload["selected_skill"],
-                difficulty=start_payload["difficulty"],
+                title=f"{(skill or 'soft skills').title()} role-play ({normalized_difficulty})"[:140],
+                selected_skill=skill,
+                difficulty=normalized_difficulty,
             )
         language = resolve_language(request.user, prompt)
         if prompt:
@@ -1085,18 +1242,24 @@ class RolePlayView(generics.GenericAPIView):
             history_rows.reverse()
             history = "\n".join([f"{row.role}: {row.content}" for row in history_rows])
             rp_prompt = (
-                "You are an AI role-play partner and soft-skills coach.\n"
-                f"Selected skill: {session.selected_skill}\n"
+                "You are an AI role-play partner.\n"
+                f"Selected skill: {session.selected_skill or 'soft skills (general)'}\n"
                 f"Difficulty: {session.difficulty}\n"
                 f"Conversation history:\n{history}\n\n"
-                "Respond in-role first, then provide short actionable feedback."
+                "Stay fully in character and respond like the other participant in the scenario. "
+                "Keep the practice broad across soft skills unless the user clearly asks to focus on a specific skill. "
+                "Do not give coaching, tips, or feedback unless the user explicitly asks for it."
             )
             reply = ask_gemini(rp_prompt, max_output_tokens=700, temperature=0.35, response_language=language)
             if _is_ai_service_error(reply):
-                reply = _build_roleplay_service_fallback(
-                    session.selected_skill,
-                    user_prompt=prompt,
-                    response_language=language,
+                print(f"RolePlayView AI error: {reply}")
+                return Response(
+                    _build_ai_service_unavailable_payload(
+                        reply,
+                        "The AI role-play service is unavailable right now.",
+                        session_id=session.id,
+                    ),
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
                 )
             RolePlayMessage.objects.create(session=session, role=RolePlayMessage.Role.AI, content=reply)
         else:

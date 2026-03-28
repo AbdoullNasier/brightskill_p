@@ -150,4 +150,4 @@ CORS_ALLOWED_ORIGINS = config(
 )
 
 GEMINI_API_KEY = config("GEMINI_API_KEY", default="")
-GEMINI_MODEL = config("GEMINI_MODEL", default="gemini-2.0-flash")
+GEMINI_MODEL = config("GEMINI_MODEL", default="gemini-2.5-flash")

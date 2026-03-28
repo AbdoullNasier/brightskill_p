@@ -61,6 +61,7 @@ class RolePlayMessage(models.Model):
 class InterviewAssessment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="interview_assessments", on_delete=models.CASCADE)
     selected_skill = models.CharField(max_length=64, blank=True, default="")
+    interview_language = models.CharField(max_length=100, default="en")
     is_completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

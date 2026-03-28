@@ -35,7 +35,7 @@ export const translations = {
     'dash.streak': { EN: 'Current Streak', HA: 'Gwani na Yanzu' },
     'dash.hours': { EN: 'Hours Learned', HA: 'Awannin Koyo' },
     'dash.total_xp': { EN: 'Total XP', HA: 'Jimillar XP' },
-    'dash.modules_done': { EN: 'Modules Done', HA: 'Darussan da aka yi' },
+    'dash.courses_done': { EN: 'Courses Done', HA: 'Darussan da aka yi' },
     'dash.continue_learning': { EN: 'Continue Learning', HA: 'Ci gaba da Koyo' },
     'dash.recommended': { EN: 'Recommended Resources', HA: 'Abubuwan da aka Shawarta' },
     'dash.edit_profile': { EN: 'Edit Profile', HA: 'Gyara Bayanai' },

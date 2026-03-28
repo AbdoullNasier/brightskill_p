@@ -87,7 +87,7 @@ const Certificate = () => {
             const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
             pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
-            pdf.save(`BrightSkill_Certificate_${courseName.replace(/\s+/g, '_')}.pdf`);
+            pdf.save(`${studentName} BrightSkill_Certificate_${courseName.replace(/\s+/g, '_')}.pdf`);
         } catch (error) {
             console.error("Certificate generation failed", error);
             setDownloadError('Certificate download failed. Please try again.');

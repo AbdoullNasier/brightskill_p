@@ -73,7 +73,7 @@ const AIAssistant = () => {
                     current_stage: currentStage?.stage_title || '',
                     roadmap_tasks: currentStage?.learner_actions || '',
                 };
-                setPageContext({ page: 'skills', page_context: ctx });
+                setPageContext({ page: 'roadmap', page_context: ctx });
                 return;
             }
 
@@ -143,31 +143,22 @@ const AIAssistant = () => {
     }, [isAuthenticated, isOpen, roleplayMode, displayName, messages.length]);
 
     const sendRoleplayMessage = async (text) => {
-        const selectedSkill = roadmapContext?.selected_skill || 'communication';
-        let sessionId = roleplaySessionId;
-        if (!sessionId) {
-            const currentStage = Array.isArray(roadmapContext?.stages)
-                ? roadmapContext.stages.find((s) => !s.is_completed) || roadmapContext.stages[0]
-                : null;
-            const start = await postAI('/roleplay/start/', {
-                selected_skill: selectedSkill,
+        const selectedSkill = roadmapContext?.selected_skill || '';
+        const currentStage = Array.isArray(roadmapContext?.stages)
+            ? roadmapContext.stages.find((s) => !s.is_completed) || roadmapContext.stages[0]
+            : null;
+        const data = await postAI('/roleplay/', {
+            prompt: text,
+            ...(roleplaySessionId ? { session_id: roleplaySessionId } : {}),
+            scenario: currentStage?.stage_objective || 'Practice a realistic soft-skills situation',
+            context: {
                 difficulty: roleplayDifficulty,
-                roadmap_stage_id: currentStage?.id,
-                scenario: currentStage?.stage_objective || `Practice ${selectedSkill}`,
-                compact_mode: true,
-            });
-            sessionId = start.session_id;
-            setRoleplaySessionId(sessionId);
-            if (start?.reply) {
-                setMessages((prev) => [...prev, { sender: 'ai', text: start.reply, time: new Date() }]);
-            }
-        }
-
-        const data = await postAI('/roleplay/message/', {
-            session_id: sessionId,
-            message: text,
-            compact_mode: true,
+                ...(selectedSkill ? { selected_skill: selectedSkill } : {}),
+            },
         });
+        if (data?.session_id && data.session_id !== roleplaySessionId) {
+            setRoleplaySessionId(data.session_id);
+        }
         return data;
     };
 
@@ -226,11 +217,11 @@ const AIAssistant = () => {
                 className={`
                     pointer-events-auto bg-white rounded-2xl shadow-2xl border border-gray-200
                     w-80 md:w-96 transition-all duration-300 ease-in-out transform origin-bottom-right
-                    ${isOpen ? 'scale-100 opacity-100 mb-4 translation-y-0' : 'scale-75 opacity-0 mb-0 translate-y-10 h-0 overflow-hidden'}
+                    ${isOpen ? 'scale-100 opacity-100 mb-4 translate-y-0' : 'scale-75 opacity-0 mb-0 translate-y-10 h-0 overflow-hidden'}
                 `}
                 style={{ maxHeight: '680px', display: isOpen ? 'flex' : 'none' }}
             >
-                <div className="flex flex-col h-full w-full h-[560px]">
+                <div className="flex flex-col h-full w-full">
                     <div className="bg-indigo-600 p-4 rounded-t-2xl flex items-center justify-between">
                         <div>
                             <h3 className="text-white font-bold text-sm">Fodiye</h3>
