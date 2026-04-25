@@ -1,0 +1,483 @@
+[
+{
+  "model": "books.bookrecommendation",
+  "pk": 1,
+  "fields": {
+    "user": 4,
+    "title": "The 7 Habits of Highly Effective People",
+    "author": "Stephen R. Covey",
+    "reason": "Practical habits for communication and leadership growth.",
+    "recommended_at": "2026-02-21T13:57:51.501Z",
+    "source_type": "conversation",
+    "source_id": 1
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 2,
+  "fields": {
+    "user": 3,
+    "title": "The 7 Habits of Highly Effective People",
+    "author": "Stephen R. Covey",
+    "reason": "Practical habits for communication and leadership growth.",
+    "recommended_at": "2026-02-21T22:01:49.356Z",
+    "source_type": "conversation",
+    "source_id": 2
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 3,
+  "fields": {
+    "user": 1,
+    "title": "The 7 Habits of Highly Effective People",
+    "author": "Stephen R. Covey",
+    "reason": "Practical habits for communication and leadership growth.",
+    "recommended_at": "2026-02-28T14:44:32.212Z",
+    "source_type": "conversation",
+    "source_id": 4
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 4,
+  "fields": {
+    "user": 10,
+    "title": "Crucial Conversations",
+    "author": "Kerry Patterson, Joseph Grenny, Ron McMillan, and Al Switzler",
+    "reason": "Recommended because it directly supports clearer communication, stronger listening, and better high-stakes conversations. It matches your current focus on sustainable behavior change, effective communication.",
+    "recommended_at": "2026-03-03T16:40:16.871Z",
+    "source_type": "conversation",
+    "source_id": 7
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 5,
+  "fields": {
+    "user": 20,
+    "title": "Emotional Intelligence 2.0",
+    "author": "Travis Bradberry and Jean Greaves",
+    "reason": "Recommended because it supports self-awareness, emotional control, and stronger interpersonal relationships. It matches your current focus on emotional intelligence.",
+    "recommended_at": "2026-03-22T15:28:23.325Z",
+    "source_type": "conversation",
+    "source_id": 9
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 6,
+  "fields": {
+    "user": 20,
+    "title": "Crucial Conversations",
+    "author": "Kerry Patterson, Joseph Grenny, Ron McMillan, and Al Switzler",
+    "reason": "Recommended because it directly supports clearer communication, stronger listening, and better high-stakes conversations. It matches your current focus on communication.",
+    "recommended_at": "2026-03-22T16:53:00.649Z",
+    "source_type": "course",
+    "source_id": 11
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 7,
+  "fields": {
+    "user": 20,
+    "title": "Crucial Conversations",
+    "author": "Kerry Patterson, Joseph Grenny, Ron McMillan, and Al Switzler",
+    "reason": "Recommended because it directly supports clearer communication, stronger listening, and better high-stakes conversations. It matches your current focus on communication.",
+    "recommended_at": "2026-03-22T16:53:21.326Z",
+    "source_type": "course",
+    "source_id": 11
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 8,
+  "fields": {
+    "user": 19,
+    "title": "Emotional Intelligence 2.0",
+    "author": "Travis Bradberry and Jean Greaves",
+    "reason": "Recommended because it supports self-awareness, emotional control, and stronger interpersonal relationships. It matches your current focus on emotional intelligence.",
+    "recommended_at": "2026-03-23T13:51:43.202Z",
+    "source_type": "course",
+    "source_id": 13
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 9,
+  "fields": {
+    "user": 19,
+    "title": "Emotional Intelligence 2.0",
+    "author": "Travis Bradberry and Jean Greaves",
+    "reason": "Recommended because it supports self-awareness, emotional control, and stronger interpersonal relationships. It matches your current focus on emotional intelligence.",
+    "recommended_at": "2026-03-23T13:52:06.589Z",
+    "source_type": "course",
+    "source_id": 13
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 10,
+  "fields": {
+    "user": 19,
+    "title": "Emotional Intelligence 2.0",
+    "author": "Travis Bradberry and Jean Greaves",
+    "reason": "Recommended because it supports self-awareness, emotional control, and stronger interpersonal relationships. It matches your current focus on emotional intelligence.",
+    "recommended_at": "2026-03-23T13:57:10.671Z",
+    "source_type": "course",
+    "source_id": 13
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 11,
+  "fields": {
+    "user": 19,
+    "title": "Leaders Eat Last",
+    "author": "Simon Sinek",
+    "reason": "Recommended because it fits your need to build influence, team trust, and practical leadership habits. It matches your current focus on leadership.",
+    "recommended_at": "2026-03-23T14:02:45.390Z",
+    "source_type": "course",
+    "source_id": 12
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 12,
+  "fields": {
+    "user": 19,
+    "title": "Emotional Intelligence 2.0",
+    "author": "Travis Bradberry and Jean Greaves",
+    "reason": "Recommended because it supports self-awareness, emotional control, and stronger interpersonal relationships. It matches your current focus on emotional intelligence.",
+    "recommended_at": "2026-03-23T14:09:54.644Z",
+    "source_type": "course",
+    "source_id": 13
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 13,
+  "fields": {
+    "user": 19,
+    "title": "Deep Work",
+    "author": "Cal Newport",
+    "reason": "Recommended because it supports focus, prioritization, and more disciplined use of time. It matches your current focus on time management.",
+    "recommended_at": "2026-03-23T15:40:27.091Z",
+    "source_type": "conversation",
+    "source_id": 15
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 14,
+  "fields": {
+    "user": 21,
+    "title": "Crucial Conversations",
+    "author": "Kerry Patterson, Joseph Grenny, Ron McMillan, and Al Switzler",
+    "reason": "Recommended because it directly supports clearer communication, stronger listening, and better high-stakes conversations. It matches your current focus on communication.",
+    "recommended_at": "2026-03-23T15:56:38.041Z",
+    "source_type": "conversation",
+    "source_id": 16
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 15,
+  "fields": {
+    "user": 22,
+    "title": "Thinking, Fast and Slow",
+    "author": "Daniel Kahneman",
+    "reason": "Recommended because it helps strengthen analysis, judgment, and structured problem solving. It matches your current focus on critical thinking.",
+    "recommended_at": "2026-03-23T16:13:17.489Z",
+    "source_type": "conversation",
+    "source_id": 17
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 16,
+  "fields": {
+    "user": 23,
+    "title": "Leaders Eat Last",
+    "author": "Simon Sinek",
+    "reason": "Recommended because it fits your need to build influence, team trust, and practical leadership habits. It matches your current focus on leadership.",
+    "recommended_at": "2026-03-23T16:15:32.994Z",
+    "source_type": "conversation",
+    "source_id": 18
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 17,
+  "fields": {
+    "user": 24,
+    "title": "Deep Work",
+    "author": "Cal Newport",
+    "reason": "Recommended because it supports focus, prioritization, and more disciplined use of time. It matches your current focus on time management.",
+    "recommended_at": "2026-03-24T11:41:27.898Z",
+    "source_type": "conversation",
+    "source_id": 30
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 18,
+  "fields": {
+    "user": 24,
+    "title": "Emotional Intelligence 2.0",
+    "author": "Travis Bradberry and Jean Greaves",
+    "reason": "Recommended because it supports self-awareness, emotional control, and stronger interpersonal relationships. It matches your current focus on emotional intelligence.",
+    "recommended_at": "2026-03-24T12:27:45.142Z",
+    "source_type": "course",
+    "source_id": 13
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 19,
+  "fields": {
+    "user": 24,
+    "title": "Emotional Intelligence 2.0",
+    "author": "Travis Bradberry and Jean Greaves",
+    "reason": "Recommended because it supports self-awareness, emotional control, and stronger interpersonal relationships. It matches your current focus on emotional intelligence.",
+    "recommended_at": "2026-03-24T12:27:59.896Z",
+    "source_type": "course",
+    "source_id": 13
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 20,
+  "fields": {
+    "user": 25,
+    "title": "Thinking, Fast and Slow",
+    "author": "Daniel Kahneman",
+    "reason": "Recommended because it helps strengthen analysis, judgment, and structured problem solving. It matches your current focus on critical thinking.",
+    "recommended_at": "2026-03-24T12:57:00.546Z",
+    "source_type": "conversation",
+    "source_id": 31
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 21,
+  "fields": {
+    "user": 26,
+    "title": "Emotional Intelligence 2.0",
+    "author": "Travis Bradberry and Jean Greaves",
+    "reason": "Recommended because it supports self-awareness, emotional control, and stronger interpersonal relationships. It matches your current focus on emotional intelligence.",
+    "recommended_at": "2026-03-24T14:04:05.401Z",
+    "source_type": "conversation",
+    "source_id": 32
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 22,
+  "fields": {
+    "user": 26,
+    "title": "Crucial Conversations",
+    "author": "Kerry Patterson, Joseph Grenny, Ron McMillan, and Al Switzler",
+    "reason": "Recommended because it directly supports clearer communication, stronger listening, and better high-stakes conversations. It matches your current focus on communication.",
+    "recommended_at": "2026-03-24T14:08:23.387Z",
+    "source_type": "course",
+    "source_id": 11
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 23,
+  "fields": {
+    "user": 27,
+    "title": "Thinking, Fast and Slow",
+    "author": "Daniel Kahneman",
+    "reason": "Recommended because it helps strengthen analysis, judgment, and structured problem solving. It matches your current focus on critical thinking.",
+    "recommended_at": "2026-03-25T11:55:20.698Z",
+    "source_type": "conversation",
+    "source_id": 33
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 24,
+  "fields": {
+    "user": 28,
+    "title": "Leaders Eat Last",
+    "author": "Simon Sinek",
+    "reason": "Recommended because it fits your need to build influence, team trust, and practical leadership habits. It matches your current focus on leadership.",
+    "recommended_at": "2026-03-25T12:43:38.588Z",
+    "source_type": "conversation",
+    "source_id": 34
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 25,
+  "fields": {
+    "user": 28,
+    "title": "Crucial Conversations",
+    "author": "Kerry Patterson, Joseph Grenny, Ron McMillan, and Al Switzler",
+    "reason": "Recommended because it directly supports clearer communication, stronger listening, and better high-stakes conversations. It matches your current focus on communication.",
+    "recommended_at": "2026-03-25T12:46:25.328Z",
+    "source_type": "course",
+    "source_id": 11
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 26,
+  "fields": {
+    "user": 28,
+    "title": "Crucial Conversations",
+    "author": "Kerry Patterson, Joseph Grenny, Ron McMillan, and Al Switzler",
+    "reason": "Recommended because it directly supports clearer communication, stronger listening, and better high-stakes conversations. It matches your current focus on communication.",
+    "recommended_at": "2026-03-25T14:08:53.960Z",
+    "source_type": "course",
+    "source_id": 11
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 27,
+  "fields": {
+    "user": 28,
+    "title": "Crucial Conversations",
+    "author": "Kerry Patterson, Joseph Grenny, Ron McMillan, and Al Switzler",
+    "reason": "Recommended because it directly supports clearer communication, stronger listening, and better high-stakes conversations. It matches your current focus on communication.",
+    "recommended_at": "2026-03-25T14:09:22.803Z",
+    "source_type": "course",
+    "source_id": 11
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 28,
+  "fields": {
+    "user": 29,
+    "title": "Leaders Eat Last",
+    "author": "Simon Sinek",
+    "reason": "Recommended because it fits your need to build influence, team trust, and practical leadership habits. It matches your current focus on leadership.",
+    "recommended_at": "2026-03-26T10:37:37.790Z",
+    "source_type": "conversation",
+    "source_id": 35
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 29,
+  "fields": {
+    "user": 30,
+    "title": "Thinking, Fast and Slow",
+    "author": "Daniel Kahneman",
+    "reason": "Recommended because it helps strengthen analysis, judgment, and structured problem solving. It matches your current focus on critical thinking.",
+    "recommended_at": "2026-03-26T12:25:55.147Z",
+    "source_type": "conversation",
+    "source_id": 36
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 30,
+  "fields": {
+    "user": 30,
+    "title": "Crucial Conversations",
+    "author": "Kerry Patterson, Joseph Grenny, Ron McMillan, and Al Switzler",
+    "reason": "Recommended because it directly supports clearer communication, stronger listening, and better high-stakes conversations. It matches your current focus on communication.",
+    "recommended_at": "2026-03-26T12:28:34.401Z",
+    "source_type": "course",
+    "source_id": 11
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 31,
+  "fields": {
+    "user": 24,
+    "title": "Crucial Conversations",
+    "author": "Kerry Patterson, Joseph Grenny, Ron McMillan, and Al Switzler",
+    "reason": "Recommended because it directly supports clearer communication, stronger listening, and better high-stakes conversations. It matches your current focus on firgita j.",
+    "recommended_at": "2026-03-26T12:57:45.163Z",
+    "source_type": "course",
+    "source_id": 14
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 32,
+  "fields": {
+    "user": 31,
+    "title": "Who Moved My Cheese?",
+    "author": "Spencer Johnson",
+    "reason": "Recommended because it helps you respond better to change, uncertainty, and shifting work demands. It matches your current focus on adaptability.",
+    "recommended_at": "2026-03-26T13:10:35.607Z",
+    "source_type": "conversation",
+    "source_id": 37
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 33,
+  "fields": {
+    "user": 31,
+    "title": "Crucial Conversations",
+    "author": "Kerry Patterson, Joseph Grenny, Ron McMillan, and Al Switzler",
+    "reason": "Recommended because it directly supports clearer communication, stronger listening, and better high-stakes conversations. It matches your current focus on firgita j analytics.",
+    "recommended_at": "2026-03-26T13:13:45.540Z",
+    "source_type": "course",
+    "source_id": 14
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 34,
+  "fields": {
+    "user": 31,
+    "title": "Crucial Conversations",
+    "author": "Kerry Patterson, Joseph Grenny, Ron McMillan, and Al Switzler",
+    "reason": "Recommended because it directly supports clearer communication, stronger listening, and better high-stakes conversations. It matches your current focus on firgita j analytics.",
+    "recommended_at": "2026-03-26T20:46:09.015Z",
+    "source_type": "course",
+    "source_id": 14
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 35,
+  "fields": {
+    "user": 32,
+    "title": "Thinking, Fast and Slow",
+    "author": "Daniel Kahneman",
+    "reason": "Recommended because it helps strengthen analysis, judgment, and structured problem solving. It matches your current focus on critical thinking.",
+    "recommended_at": "2026-04-06T15:46:49.974Z",
+    "source_type": "conversation",
+    "source_id": 45
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 36,
+  "fields": {
+    "user": 33,
+    "title": "Deep Work",
+    "author": "Cal Newport",
+    "reason": "Recommended because it supports focus, prioritization, and more disciplined use of time. It matches your current focus on time management.",
+    "recommended_at": "2026-04-16T15:56:05.104Z",
+    "source_type": "conversation",
+    "source_id": 46
+  }
+},
+{
+  "model": "books.bookrecommendation",
+  "pk": 37,
+  "fields": {
+    "user": 34,
+    "title": "Deep Work",
+    "author": "Cal Newport",
+    "reason": "Recommended because it supports focus, prioritization, and more disciplined use of time. It matches your current focus on time management.",
+    "recommended_at": "2026-04-18T14:18:40.267Z",
+    "source_type": "conversation",
+    "source_id": 47
+  }
+}
+]

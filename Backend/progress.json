@@ -1,0 +1,2086 @@
+[
+{
+  "model": "progress.enrollment",
+  "pk": 1,
+  "fields": {
+    "user": 3,
+    "course": 1,
+    "enrolled_at": "2026-02-25T13:56:52.622Z"
+  }
+},
+{
+  "model": "progress.enrollment",
+  "pk": 2,
+  "fields": {
+    "user": 9,
+    "course": 9,
+    "enrolled_at": "2026-02-27T16:03:37.200Z"
+  }
+},
+{
+  "model": "progress.enrollment",
+  "pk": 3,
+  "fields": {
+    "user": 1,
+    "course": 9,
+    "enrolled_at": "2026-02-27T16:15:14.809Z"
+  }
+},
+{
+  "model": "progress.enrollment",
+  "pk": 4,
+  "fields": {
+    "user": 10,
+    "course": 10,
+    "enrolled_at": "2026-03-03T08:42:25.267Z"
+  }
+},
+{
+  "model": "progress.enrollment",
+  "pk": 5,
+  "fields": {
+    "user": 20,
+    "course": 11,
+    "enrolled_at": "2026-03-22T15:46:33.788Z"
+  }
+},
+{
+  "model": "progress.enrollment",
+  "pk": 6,
+  "fields": {
+    "user": 20,
+    "course": 12,
+    "enrolled_at": "2026-03-23T11:47:27.029Z"
+  }
+},
+{
+  "model": "progress.enrollment",
+  "pk": 7,
+  "fields": {
+    "user": 19,
+    "course": 13,
+    "enrolled_at": "2026-03-23T13:01:41.138Z"
+  }
+},
+{
+  "model": "progress.enrollment",
+  "pk": 8,
+  "fields": {
+    "user": 19,
+    "course": 12,
+    "enrolled_at": "2026-03-23T14:01:21.828Z"
+  }
+},
+{
+  "model": "progress.enrollment",
+  "pk": 9,
+  "fields": {
+    "user": 24,
+    "course": 13,
+    "enrolled_at": "2026-03-24T12:14:26.567Z"
+  }
+},
+{
+  "model": "progress.enrollment",
+  "pk": 10,
+  "fields": {
+    "user": 26,
+    "course": 11,
+    "enrolled_at": "2026-03-24T14:06:15.744Z"
+  }
+},
+{
+  "model": "progress.enrollment",
+  "pk": 11,
+  "fields": {
+    "user": 28,
+    "course": 11,
+    "enrolled_at": "2026-03-25T12:44:46.850Z"
+  }
+},
+{
+  "model": "progress.enrollment",
+  "pk": 12,
+  "fields": {
+    "user": 19,
+    "course": 11,
+    "enrolled_at": "2026-03-26T09:24:44.558Z"
+  }
+},
+{
+  "model": "progress.enrollment",
+  "pk": 13,
+  "fields": {
+    "user": 30,
+    "course": 11,
+    "enrolled_at": "2026-03-26T12:27:09.947Z"
+  }
+},
+{
+  "model": "progress.enrollment",
+  "pk": 14,
+  "fields": {
+    "user": 24,
+    "course": 14,
+    "enrolled_at": "2026-03-26T12:54:46.343Z"
+  }
+},
+{
+  "model": "progress.enrollment",
+  "pk": 15,
+  "fields": {
+    "user": 31,
+    "course": 14,
+    "enrolled_at": "2026-03-26T13:13:35.162Z"
+  }
+},
+{
+  "model": "progress.enrollment",
+  "pk": 16,
+  "fields": {
+    "user": 34,
+    "course": 11,
+    "enrolled_at": "2026-04-18T14:21:52.941Z"
+  }
+},
+{
+  "model": "progress.progress",
+  "pk": 1,
+  "fields": {
+    "user": 3,
+    "course": 1,
+    "completed_modules": [],
+    "completion_percentage": "0.00",
+    "last_updated": "2026-03-23T12:17:51.564Z"
+  }
+},
+{
+  "model": "progress.progress",
+  "pk": 2,
+  "fields": {
+    "user": 9,
+    "course": 9,
+    "completed_modules": [],
+    "completion_percentage": "0.00",
+    "last_updated": "2026-03-24T14:31:52.635Z"
+  }
+},
+{
+  "model": "progress.progress",
+  "pk": 3,
+  "fields": {
+    "user": 1,
+    "course": 9,
+    "completed_modules": [],
+    "completion_percentage": "0.00",
+    "last_updated": "2026-03-26T10:34:45.702Z"
+  }
+},
+{
+  "model": "progress.progress",
+  "pk": 4,
+  "fields": {
+    "user": 3,
+    "course": 9,
+    "completed_modules": [
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "completion_percentage": "83.33",
+    "last_updated": "2026-03-23T12:17:51.572Z"
+  }
+},
+{
+  "model": "progress.progress",
+  "pk": 5,
+  "fields": {
+    "user": 10,
+    "course": 10,
+    "completed_modules": [
+      11,
+      12
+    ],
+    "completion_percentage": "66.67",
+    "last_updated": "2026-03-03T08:44:54.907Z"
+  }
+},
+{
+  "model": "progress.progress",
+  "pk": 6,
+  "fields": {
+    "user": 20,
+    "course": 11,
+    "completed_modules": [
+      13,
+      14,
+      15
+    ],
+    "completion_percentage": "100.00",
+    "last_updated": "2026-03-25T14:19:05.562Z"
+  }
+},
+{
+  "model": "progress.progress",
+  "pk": 7,
+  "fields": {
+    "user": 5,
+    "course": 11,
+    "completed_modules": [
+      14
+    ],
+    "completion_percentage": "33.33",
+    "last_updated": "2026-03-26T13:11:19.197Z"
+  }
+},
+{
+  "model": "progress.progress",
+  "pk": 8,
+  "fields": {
+    "user": 20,
+    "course": 12,
+    "completed_modules": [],
+    "completion_percentage": "0.00",
+    "last_updated": "2026-03-25T14:19:05.573Z"
+  }
+},
+{
+  "model": "progress.progress",
+  "pk": 9,
+  "fields": {
+    "user": 19,
+    "course": 13,
+    "completed_modules": [
+      19,
+      20
+    ],
+    "completion_percentage": "100.00",
+    "last_updated": "2026-03-26T09:53:46.975Z"
+  }
+},
+{
+  "model": "progress.progress",
+  "pk": 10,
+  "fields": {
+    "user": 19,
+    "course": 12,
+    "completed_modules": [
+      16,
+      17,
+      18
+    ],
+    "completion_percentage": "100.00",
+    "last_updated": "2026-03-26T09:53:46.969Z"
+  }
+},
+{
+  "model": "progress.progress",
+  "pk": 11,
+  "fields": {
+    "user": 24,
+    "course": 13,
+    "completed_modules": [
+      19,
+      20
+    ],
+    "completion_percentage": "100.00",
+    "last_updated": "2026-03-26T13:08:17.596Z"
+  }
+},
+{
+  "model": "progress.progress",
+  "pk": 12,
+  "fields": {
+    "user": 26,
+    "course": 11,
+    "completed_modules": [
+      13,
+      14,
+      15
+    ],
+    "completion_percentage": "100.00",
+    "last_updated": "2026-03-25T11:50:39.938Z"
+  }
+},
+{
+  "model": "progress.progress",
+  "pk": 13,
+  "fields": {
+    "user": 28,
+    "course": 11,
+    "completed_modules": [
+      13,
+      14,
+      15
+    ],
+    "completion_percentage": "100.00",
+    "last_updated": "2026-03-25T14:09:33.065Z"
+  }
+},
+{
+  "model": "progress.progress",
+  "pk": 14,
+  "fields": {
+    "user": 19,
+    "course": 11,
+    "completed_modules": [
+      13
+    ],
+    "completion_percentage": "33.33",
+    "last_updated": "2026-03-26T09:53:46.946Z"
+  }
+},
+{
+  "model": "progress.progress",
+  "pk": 15,
+  "fields": {
+    "user": 30,
+    "course": 11,
+    "completed_modules": [
+      13,
+      14
+    ],
+    "completion_percentage": "66.67",
+    "last_updated": "2026-03-26T12:35:44.644Z"
+  }
+},
+{
+  "model": "progress.progress",
+  "pk": 16,
+  "fields": {
+    "user": 24,
+    "course": 14,
+    "completed_modules": [
+      21
+    ],
+    "completion_percentage": "100.00",
+    "last_updated": "2026-03-26T13:08:17.612Z"
+  }
+},
+{
+  "model": "progress.progress",
+  "pk": 17,
+  "fields": {
+    "user": 31,
+    "course": 14,
+    "completed_modules": [],
+    "completion_percentage": "0.00",
+    "last_updated": "2026-03-28T12:28:33.362Z"
+  }
+},
+{
+  "model": "progress.progress",
+  "pk": 18,
+  "fields": {
+    "user": 34,
+    "course": 11,
+    "completed_modules": [
+      13
+    ],
+    "completion_percentage": "33.33",
+    "last_updated": "2026-04-18T18:00:28.257Z"
+  }
+},
+{
+  "model": "progress.quiz",
+  "pk": 2,
+  "fields": {
+    "course": 10,
+    "module": 10,
+    "title": "MODULE 1 QUIZ",
+    "quiz_type": "module",
+    "pass_score": "70.00"
+  }
+},
+{
+  "model": "progress.quiz",
+  "pk": 4,
+  "fields": {
+    "course": 11,
+    "module": 14,
+    "title": "Module 2 quiz",
+    "quiz_type": "module",
+    "pass_score": "70.00"
+  }
+},
+{
+  "model": "progress.quiz",
+  "pk": 5,
+  "fields": {
+    "course": 11,
+    "module": null,
+    "title": "Communication Exam",
+    "quiz_type": "exam",
+    "pass_score": "70.00"
+  }
+},
+{
+  "model": "progress.quiz",
+  "pk": 6,
+  "fields": {
+    "course": 12,
+    "module": 17,
+    "title": "Module 2 quiz",
+    "quiz_type": "module",
+    "pass_score": "70.00"
+  }
+},
+{
+  "model": "progress.quiz",
+  "pk": 7,
+  "fields": {
+    "course": 12,
+    "module": null,
+    "title": "Leadership final exam",
+    "quiz_type": "exam",
+    "pass_score": "70.00"
+  }
+},
+{
+  "model": "progress.quiz",
+  "pk": 8,
+  "fields": {
+    "course": 13,
+    "module": 19,
+    "title": "Modul 1 quiz",
+    "quiz_type": "module",
+    "pass_score": "70.00"
+  }
+},
+{
+  "model": "progress.quiz",
+  "pk": 9,
+  "fields": {
+    "course": 13,
+    "module": 20,
+    "title": "Quiz 2",
+    "quiz_type": "module",
+    "pass_score": "70.00"
+  }
+},
+{
+  "model": "progress.quiz",
+  "pk": 10,
+  "fields": {
+    "course": 13,
+    "module": null,
+    "title": "Final Exam",
+    "quiz_type": "exam",
+    "pass_score": "70.00"
+  }
+},
+{
+  "model": "progress.quiz",
+  "pk": 11,
+  "fields": {
+    "course": 14,
+    "module": null,
+    "title": "qjdjjdjsjjjj",
+    "quiz_type": "exam",
+    "pass_score": "70.00"
+  }
+},
+{
+  "model": "progress.quizquestion",
+  "pk": 8,
+  "fields": {
+    "quiz": 2,
+    "prompt": "1. Leadership is best defined as:",
+    "order_index": 1
+  }
+},
+{
+  "model": "progress.quizquestion",
+  "pk": 9,
+  "fields": {
+    "quiz": 2,
+    "prompt": "Which of the following focuses on planning and organizing tasks?",
+    "order_index": 2
+  }
+},
+{
+  "model": "progress.quizquestion",
+  "pk": 10,
+  "fields": {
+    "quiz": 2,
+    "prompt": "Situational leadership suggests that:",
+    "order_index": 3
+  }
+},
+{
+  "model": "progress.quizquestion",
+  "pk": 14,
+  "fields": {
+    "quiz": 4,
+    "prompt": "What is active listening?",
+    "order_index": 1
+  }
+},
+{
+  "model": "progress.quizquestion",
+  "pk": 15,
+  "fields": {
+    "quiz": 5,
+    "prompt": "Communication is best defined as",
+    "order_index": 1
+  }
+},
+{
+  "model": "progress.quizquestion",
+  "pk": 16,
+  "fields": {
+    "quiz": 5,
+    "prompt": "Which type of communication includes body language?",
+    "order_index": 2
+  }
+},
+{
+  "model": "progress.quizquestion",
+  "pk": 17,
+  "fields": {
+    "quiz": 5,
+    "prompt": "What is an important principle of workplace communication?",
+    "order_index": 3
+  }
+},
+{
+  "model": "progress.quizquestion",
+  "pk": 18,
+  "fields": {
+    "quiz": 5,
+    "prompt": "Active listening requires",
+    "order_index": 4
+  }
+},
+{
+  "model": "progress.quizquestion",
+  "pk": 19,
+  "fields": {
+    "quiz": 6,
+    "prompt": "Leadership is best defined as",
+    "order_index": 1
+  }
+},
+{
+  "model": "progress.quizquestion",
+  "pk": 20,
+  "fields": {
+    "quiz": 7,
+    "prompt": "Leadership involves",
+    "order_index": 1
+  }
+},
+{
+  "model": "progress.quizquestion",
+  "pk": 21,
+  "fields": {
+    "quiz": 7,
+    "prompt": "Which quality helps leaders build trust?",
+    "order_index": 2
+  }
+},
+{
+  "model": "progress.quizquestion",
+  "pk": 22,
+  "fields": {
+    "quiz": 7,
+    "prompt": "Motivating a team helps to",
+    "order_index": 3
+  }
+},
+{
+  "model": "progress.quizquestion",
+  "pk": 23,
+  "fields": {
+    "quiz": 8,
+    "prompt": "Emotional intelligence means",
+    "order_index": 1
+  }
+},
+{
+  "model": "progress.quizquestion",
+  "pk": 24,
+  "fields": {
+    "quiz": 8,
+    "prompt": "Which component of emotional intelligence involves recognizing your own feelings?",
+    "order_index": 2
+  }
+},
+{
+  "model": "progress.quizquestion",
+  "pk": 25,
+  "fields": {
+    "quiz": 9,
+    "prompt": "Empathy means",
+    "order_index": 1
+  }
+},
+{
+  "model": "progress.quizquestion",
+  "pk": 26,
+  "fields": {
+    "quiz": 10,
+    "prompt": "Emotional intelligence involves",
+    "order_index": 1
+  }
+},
+{
+  "model": "progress.quizquestion",
+  "pk": 27,
+  "fields": {
+    "quiz": 10,
+    "prompt": "Self-awareness means",
+    "order_index": 2
+  }
+},
+{
+  "model": "progress.quizquestion",
+  "pk": 28,
+  "fields": {
+    "quiz": 11,
+    "prompt": "mene ne ma'anar Firgita J",
+    "order_index": 1
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 29,
+  "fields": {
+    "question": 8,
+    "option_text": "The power to control employees",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 30,
+  "fields": {
+    "question": 8,
+    "option_text": "The ability to influence others toward a goal",
+    "is_correct": true
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 31,
+  "fields": {
+    "question": 8,
+    "option_text": "The process of giving instructions only",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 32,
+  "fields": {
+    "question": 8,
+    "option_text": "Holding a high position in an organization",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 33,
+  "fields": {
+    "question": 9,
+    "option_text": "Leadership",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 34,
+  "fields": {
+    "question": 9,
+    "option_text": "Motivation",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 35,
+  "fields": {
+    "question": 9,
+    "option_text": "Management",
+    "is_correct": true
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 36,
+  "fields": {
+    "question": 9,
+    "option_text": "Vision",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 37,
+  "fields": {
+    "question": 10,
+    "option_text": "Leaders are born, not made",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 38,
+  "fields": {
+    "question": 10,
+    "option_text": "Only one leadership style is effective",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 39,
+  "fields": {
+    "question": 10,
+    "option_text": "Leadership style must adapt to circumstances",
+    "is_correct": true
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 40,
+  "fields": {
+    "question": 10,
+    "option_text": "Leadership depends solely on authority",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 53,
+  "fields": {
+    "question": 14,
+    "option_text": "Ignoring the speaker",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 54,
+  "fields": {
+    "question": 14,
+    "option_text": "Listening carefully and understanding the message",
+    "is_correct": true
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 55,
+  "fields": {
+    "question": 14,
+    "option_text": "Speaking continuously",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 56,
+  "fields": {
+    "question": 14,
+    "option_text": "Interrupting the speaker",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 57,
+  "fields": {
+    "question": 15,
+    "option_text": "speaking loudly",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 58,
+  "fields": {
+    "question": 15,
+    "option_text": "exchanging information and ideas",
+    "is_correct": true
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 59,
+  "fields": {
+    "question": 15,
+    "option_text": "writing only",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 60,
+  "fields": {
+    "question": 15,
+    "option_text": "writing only",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 61,
+  "fields": {
+    "question": 16,
+    "option_text": "Written communication",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 62,
+  "fields": {
+    "question": 16,
+    "option_text": "Visual communication",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 63,
+  "fields": {
+    "question": 16,
+    "option_text": "Non-verbal communication",
+    "is_correct": true
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 64,
+  "fields": {
+    "question": 16,
+    "option_text": "Digital communication",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 65,
+  "fields": {
+    "question": 17,
+    "option_text": "Speaking quickly",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 66,
+  "fields": {
+    "question": 17,
+    "option_text": "Being clear and respectful",
+    "is_correct": true
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 67,
+  "fields": {
+    "question": 17,
+    "option_text": "Avoiding teamwork",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 68,
+  "fields": {
+    "question": 17,
+    "option_text": "Ignoring feedback",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 69,
+  "fields": {
+    "question": 18,
+    "option_text": "interrupting frequently",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 70,
+  "fields": {
+    "question": 18,
+    "option_text": "focusing on the speaker",
+    "is_correct": true
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 71,
+  "fields": {
+    "question": 18,
+    "option_text": "thinking about something else",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 72,
+  "fields": {
+    "question": 18,
+    "option_text": "ignoring questions",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 73,
+  "fields": {
+    "question": 19,
+    "option_text": "controlling people",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 74,
+  "fields": {
+    "question": 19,
+    "option_text": "guiding and influencing others toward a goal",
+    "is_correct": true
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 75,
+  "fields": {
+    "question": 19,
+    "option_text": "speaking loudly",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 76,
+  "fields": {
+    "question": 19,
+    "option_text": "avoiding responsibility",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 77,
+  "fields": {
+    "question": 20,
+    "option_text": "guiding and motivating others",
+    "is_correct": true
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 78,
+  "fields": {
+    "question": 20,
+    "option_text": "working alone",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 79,
+  "fields": {
+    "question": 20,
+    "option_text": "avoiding teamwork",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 80,
+  "fields": {
+    "question": 20,
+    "option_text": "ignoring problems",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 81,
+  "fields": {
+    "question": 21,
+    "option_text": "dishonesty",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 82,
+  "fields": {
+    "question": 21,
+    "option_text": "integrity",
+    "is_correct": true
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 83,
+  "fields": {
+    "question": 21,
+    "option_text": "impatience",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 84,
+  "fields": {
+    "question": 21,
+    "option_text": "secrecy",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 85,
+  "fields": {
+    "question": 22,
+    "option_text": "reduce productivity",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 86,
+  "fields": {
+    "question": 22,
+    "option_text": "improve teamwork and performance",
+    "is_correct": true
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 87,
+  "fields": {
+    "question": 22,
+    "option_text": "create confusion",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 88,
+  "fields": {
+    "question": 22,
+    "option_text": "avoid responsibility",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 89,
+  "fields": {
+    "question": 23,
+    "option_text": "controlling other people",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 90,
+  "fields": {
+    "question": 23,
+    "option_text": "understanding and managing emotions",
+    "is_correct": true
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 91,
+  "fields": {
+    "question": 23,
+    "option_text": "ignoring emotions",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 92,
+  "fields": {
+    "question": 23,
+    "option_text": "avoiding communication",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 93,
+  "fields": {
+    "question": 24,
+    "option_text": "social awareness",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 94,
+  "fields": {
+    "question": 24,
+    "option_text": "self-awareness",
+    "is_correct": true
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 95,
+  "fields": {
+    "question": 24,
+    "option_text": "empathy",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 96,
+  "fields": {
+    "question": 24,
+    "option_text": "motivation",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 97,
+  "fields": {
+    "question": 25,
+    "option_text": "ignoring others",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 98,
+  "fields": {
+    "question": 25,
+    "option_text": "understanding others' emotions",
+    "is_correct": true
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 99,
+  "fields": {
+    "question": 25,
+    "option_text": "controlling people",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 100,
+  "fields": {
+    "question": 25,
+    "option_text": "avoiding communication",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 101,
+  "fields": {
+    "question": 26,
+    "option_text": "ignoring feelings",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 102,
+  "fields": {
+    "question": 26,
+    "option_text": "understanding emotions",
+    "is_correct": true
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 103,
+  "fields": {
+    "question": 26,
+    "option_text": "controlling people",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 104,
+  "fields": {
+    "question": 26,
+    "option_text": "avoiding communication",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 105,
+  "fields": {
+    "question": 27,
+    "option_text": "recognizing your emotions",
+    "is_correct": true
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 106,
+  "fields": {
+    "question": 27,
+    "option_text": "controlling others",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 107,
+  "fields": {
+    "question": 27,
+    "option_text": "ignoring feedback",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 108,
+  "fields": {
+    "question": 27,
+    "option_text": "avoiding problems",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 109,
+  "fields": {
+    "question": 28,
+    "option_text": "`Yan dabaru",
+    "is_correct": true
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 110,
+  "fields": {
+    "question": 28,
+    "option_text": "ci da buguzum",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 111,
+  "fields": {
+    "question": 28,
+    "option_text": "rashin kunya",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizoption",
+  "pk": 112,
+  "fields": {
+    "question": 28,
+    "option_text": "ba amsar duka",
+    "is_correct": false
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 1,
+  "fields": {
+    "user": 10,
+    "quiz": 2,
+    "score": "100.00",
+    "attempt_date": "2026-03-03T08:44:47.546Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 2,
+  "fields": {
+    "user": 20,
+    "quiz": 4,
+    "score": "100.00",
+    "attempt_date": "2026-03-22T15:47:34.060Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 3,
+  "fields": {
+    "user": 20,
+    "quiz": 5,
+    "score": "75.00",
+    "attempt_date": "2026-03-22T15:53:24.152Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 4,
+  "fields": {
+    "user": 20,
+    "quiz": 4,
+    "score": "0.00",
+    "attempt_date": "2026-03-22T15:53:41.483Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 5,
+  "fields": {
+    "user": 5,
+    "quiz": 4,
+    "score": "100.00",
+    "attempt_date": "2026-03-22T15:54:00.416Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 6,
+  "fields": {
+    "user": 5,
+    "quiz": 5,
+    "score": "75.00",
+    "attempt_date": "2026-03-22T15:54:16.437Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 7,
+  "fields": {
+    "user": 20,
+    "quiz": 4,
+    "score": "100.00",
+    "attempt_date": "2026-03-22T15:55:19.302Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 8,
+  "fields": {
+    "user": 20,
+    "quiz": 5,
+    "score": "50.00",
+    "attempt_date": "2026-03-22T15:55:31.613Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 9,
+  "fields": {
+    "user": 20,
+    "quiz": 5,
+    "score": "100.00",
+    "attempt_date": "2026-03-22T16:07:59.905Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 10,
+  "fields": {
+    "user": 20,
+    "quiz": 5,
+    "score": "100.00",
+    "attempt_date": "2026-03-22T16:08:21.587Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 11,
+  "fields": {
+    "user": 20,
+    "quiz": 4,
+    "score": "100.00",
+    "attempt_date": "2026-03-22T16:22:20.040Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 12,
+  "fields": {
+    "user": 20,
+    "quiz": 5,
+    "score": "50.00",
+    "attempt_date": "2026-03-22T16:22:32.553Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 13,
+  "fields": {
+    "user": 20,
+    "quiz": 5,
+    "score": "100.00",
+    "attempt_date": "2026-03-22T16:22:49.102Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 14,
+  "fields": {
+    "user": 20,
+    "quiz": 4,
+    "score": "100.00",
+    "attempt_date": "2026-03-22T16:52:56.368Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 15,
+  "fields": {
+    "user": 20,
+    "quiz": 4,
+    "score": "100.00",
+    "attempt_date": "2026-03-22T16:53:00.351Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 16,
+  "fields": {
+    "user": 20,
+    "quiz": 5,
+    "score": "100.00",
+    "attempt_date": "2026-03-22T16:53:21.272Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 17,
+  "fields": {
+    "user": 19,
+    "quiz": 8,
+    "score": "50.00",
+    "attempt_date": "2026-03-23T13:26:52.257Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 18,
+  "fields": {
+    "user": 19,
+    "quiz": 8,
+    "score": "100.00",
+    "attempt_date": "2026-03-23T13:27:01.335Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 19,
+  "fields": {
+    "user": 19,
+    "quiz": 9,
+    "score": "100.00",
+    "attempt_date": "2026-03-23T13:27:19.185Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 20,
+  "fields": {
+    "user": 19,
+    "quiz": 8,
+    "score": "100.00",
+    "attempt_date": "2026-03-23T13:30:55.302Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 21,
+  "fields": {
+    "user": 19,
+    "quiz": 9,
+    "score": "100.00",
+    "attempt_date": "2026-03-23T13:31:07.616Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 22,
+  "fields": {
+    "user": 19,
+    "quiz": 10,
+    "score": "50.00",
+    "attempt_date": "2026-03-23T13:32:21.594Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 23,
+  "fields": {
+    "user": 19,
+    "quiz": 10,
+    "score": "100.00",
+    "attempt_date": "2026-03-23T13:32:46.241Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 24,
+  "fields": {
+    "user": 19,
+    "quiz": 10,
+    "score": "100.00",
+    "attempt_date": "2026-03-23T13:35:56.642Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 25,
+  "fields": {
+    "user": 19,
+    "quiz": 10,
+    "score": "50.00",
+    "attempt_date": "2026-03-23T13:36:19.606Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 26,
+  "fields": {
+    "user": 19,
+    "quiz": 10,
+    "score": "100.00",
+    "attempt_date": "2026-03-23T13:36:26.939Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 27,
+  "fields": {
+    "user": 19,
+    "quiz": 10,
+    "score": "100.00",
+    "attempt_date": "2026-03-23T13:51:43.108Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 28,
+  "fields": {
+    "user": 19,
+    "quiz": 10,
+    "score": "100.00",
+    "attempt_date": "2026-03-23T13:52:06.535Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 29,
+  "fields": {
+    "user": 19,
+    "quiz": 10,
+    "score": "100.00",
+    "attempt_date": "2026-03-23T13:57:10.599Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 30,
+  "fields": {
+    "user": 19,
+    "quiz": 6,
+    "score": "100.00",
+    "attempt_date": "2026-03-23T14:01:48.460Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 31,
+  "fields": {
+    "user": 19,
+    "quiz": 6,
+    "score": "100.00",
+    "attempt_date": "2026-03-23T14:01:55.207Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 32,
+  "fields": {
+    "user": 19,
+    "quiz": 7,
+    "score": "100.00",
+    "attempt_date": "2026-03-23T14:02:45.321Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 33,
+  "fields": {
+    "user": 19,
+    "quiz": 10,
+    "score": "100.00",
+    "attempt_date": "2026-03-23T14:09:54.574Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 34,
+  "fields": {
+    "user": 24,
+    "quiz": 8,
+    "score": "100.00",
+    "attempt_date": "2026-03-24T12:14:38.838Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 35,
+  "fields": {
+    "user": 24,
+    "quiz": 10,
+    "score": "100.00",
+    "attempt_date": "2026-03-24T12:14:53.719Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 36,
+  "fields": {
+    "user": 24,
+    "quiz": 10,
+    "score": "100.00",
+    "attempt_date": "2026-03-24T12:15:23.927Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 37,
+  "fields": {
+    "user": 24,
+    "quiz": 8,
+    "score": "100.00",
+    "attempt_date": "2026-03-24T12:27:36.365Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 38,
+  "fields": {
+    "user": 24,
+    "quiz": 9,
+    "score": "100.00",
+    "attempt_date": "2026-03-24T12:27:44.953Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 39,
+  "fields": {
+    "user": 24,
+    "quiz": 10,
+    "score": "100.00",
+    "attempt_date": "2026-03-24T12:27:59.855Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 40,
+  "fields": {
+    "user": 26,
+    "quiz": 4,
+    "score": "100.00",
+    "attempt_date": "2026-03-24T14:06:44.669Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 41,
+  "fields": {
+    "user": 26,
+    "quiz": 4,
+    "score": "100.00",
+    "attempt_date": "2026-03-24T14:06:51.406Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 42,
+  "fields": {
+    "user": 26,
+    "quiz": 5,
+    "score": "100.00",
+    "attempt_date": "2026-03-24T14:08:23.337Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 43,
+  "fields": {
+    "user": 28,
+    "quiz": 4,
+    "score": "100.00",
+    "attempt_date": "2026-03-25T12:45:41.512Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 44,
+  "fields": {
+    "user": 28,
+    "quiz": 5,
+    "score": "75.00",
+    "attempt_date": "2026-03-25T12:46:25.267Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 45,
+  "fields": {
+    "user": 28,
+    "quiz": 4,
+    "score": "100.00",
+    "attempt_date": "2026-03-25T14:08:50.266Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 46,
+  "fields": {
+    "user": 28,
+    "quiz": 4,
+    "score": "100.00",
+    "attempt_date": "2026-03-25T14:08:53.766Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 47,
+  "fields": {
+    "user": 28,
+    "quiz": 5,
+    "score": "100.00",
+    "attempt_date": "2026-03-25T14:09:22.751Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 48,
+  "fields": {
+    "user": 30,
+    "quiz": 4,
+    "score": "100.00",
+    "attempt_date": "2026-03-26T12:27:58.317Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 49,
+  "fields": {
+    "user": 30,
+    "quiz": 5,
+    "score": "100.00",
+    "attempt_date": "2026-03-26T12:28:34.351Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 50,
+  "fields": {
+    "user": 24,
+    "quiz": 11,
+    "score": "100.00",
+    "attempt_date": "2026-03-26T12:57:45.104Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 51,
+  "fields": {
+    "user": 31,
+    "quiz": 11,
+    "score": "100.00",
+    "attempt_date": "2026-03-26T13:13:45.485Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 52,
+  "fields": {
+    "user": 31,
+    "quiz": 11,
+    "score": "100.00",
+    "attempt_date": "2026-03-26T20:46:08.954Z"
+  }
+},
+{
+  "model": "progress.quizattempt",
+  "pk": 53,
+  "fields": {
+    "user": 34,
+    "quiz": 4,
+    "score": "100.00",
+    "attempt_date": "2026-04-18T14:23:39.984Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 1,
+  "fields": {
+    "user": 3,
+    "module": 3,
+    "completed_at": "2026-03-01T14:41:50.172Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 2,
+  "fields": {
+    "user": 3,
+    "module": 4,
+    "completed_at": "2026-03-01T14:41:53.678Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 3,
+  "fields": {
+    "user": 3,
+    "module": 5,
+    "completed_at": "2026-03-01T14:41:58.549Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 4,
+  "fields": {
+    "user": 3,
+    "module": 6,
+    "completed_at": "2026-03-01T14:42:01.377Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 5,
+  "fields": {
+    "user": 3,
+    "module": 7,
+    "completed_at": "2026-03-01T14:42:05.608Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 6,
+  "fields": {
+    "user": 10,
+    "module": 11,
+    "completed_at": "2026-03-03T08:44:47.764Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 7,
+  "fields": {
+    "user": 10,
+    "module": 12,
+    "completed_at": "2026-03-03T08:44:54.893Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 8,
+  "fields": {
+    "user": 20,
+    "module": 13,
+    "completed_at": "2026-03-22T15:47:01.599Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 9,
+  "fields": {
+    "user": 20,
+    "module": 14,
+    "completed_at": "2026-03-22T15:47:34.260Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 10,
+  "fields": {
+    "user": 5,
+    "module": 14,
+    "completed_at": "2026-03-22T15:54:00.648Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 11,
+  "fields": {
+    "user": 20,
+    "module": 15,
+    "completed_at": "2026-03-22T16:53:00.599Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 12,
+  "fields": {
+    "user": 19,
+    "module": 19,
+    "completed_at": "2026-03-23T13:27:01.469Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 13,
+  "fields": {
+    "user": 19,
+    "module": 20,
+    "completed_at": "2026-03-23T13:31:07.780Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 14,
+  "fields": {
+    "user": 19,
+    "module": 16,
+    "completed_at": "2026-03-23T14:01:25.894Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 15,
+  "fields": {
+    "user": 19,
+    "module": 17,
+    "completed_at": "2026-03-23T14:01:48.911Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 16,
+  "fields": {
+    "user": 19,
+    "module": 18,
+    "completed_at": "2026-03-23T14:01:55.340Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 17,
+  "fields": {
+    "user": 24,
+    "module": 19,
+    "completed_at": "2026-03-24T12:14:38.985Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 18,
+  "fields": {
+    "user": 24,
+    "module": 20,
+    "completed_at": "2026-03-24T12:27:45.102Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 19,
+  "fields": {
+    "user": 26,
+    "module": 13,
+    "completed_at": "2026-03-24T14:06:27.697Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 20,
+  "fields": {
+    "user": 26,
+    "module": 14,
+    "completed_at": "2026-03-24T14:06:44.877Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 21,
+  "fields": {
+    "user": 26,
+    "module": 15,
+    "completed_at": "2026-03-24T14:06:51.614Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 22,
+  "fields": {
+    "user": 28,
+    "module": 13,
+    "completed_at": "2026-03-25T12:45:01.354Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 23,
+  "fields": {
+    "user": 28,
+    "module": 14,
+    "completed_at": "2026-03-25T12:45:41.661Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 24,
+  "fields": {
+    "user": 28,
+    "module": 15,
+    "completed_at": "2026-03-25T14:08:53.930Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 25,
+  "fields": {
+    "user": 19,
+    "module": 13,
+    "completed_at": "2026-03-26T09:25:47.498Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 26,
+  "fields": {
+    "user": 30,
+    "module": 13,
+    "completed_at": "2026-03-26T12:27:19.299Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 27,
+  "fields": {
+    "user": 30,
+    "module": 14,
+    "completed_at": "2026-03-26T12:27:58.656Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 28,
+  "fields": {
+    "user": 24,
+    "module": 21,
+    "completed_at": "2026-03-26T12:55:17.507Z"
+  }
+},
+{
+  "model": "progress.modulecompletion",
+  "pk": 29,
+  "fields": {
+    "user": 34,
+    "module": 13,
+    "completed_at": "2026-04-18T14:22:06.709Z"
+  }
+}
+]

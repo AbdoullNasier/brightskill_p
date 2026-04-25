@@ -1,0 +1,570 @@
+[
+{
+  "model": "courses.skill",
+  "pk": 1,
+  "fields": {
+    "name": "comminication",
+    "description": ""
+  }
+},
+{
+  "model": "courses.skill",
+  "pk": 2,
+  "fields": {
+    "name": "negotiation",
+    "description": ""
+  }
+},
+{
+  "model": "courses.skill",
+  "pk": 3,
+  "fields": {
+    "name": "Diagnostic Skill",
+    "description": ""
+  }
+},
+{
+  "model": "courses.course",
+  "pk": 1,
+  "fields": {
+    "skill": 1,
+    "created_by": 5,
+    "title": "how to talk in front of people",
+    "slug": "",
+    "description": "this course will teach you and guide you on how to talk in front of people with out any peer, and be able to communicate formally and delivered your expected message",
+    "difficulty": "beginner",
+    "is_published": false,
+    "is_active": false,
+    "created_at": "2026-02-25T13:55:54.458Z",
+    "updated_at": "2026-03-05T20:47:14.307Z"
+  }
+},
+{
+  "model": "courses.course",
+  "pk": 2,
+  "fields": {
+    "skill": null,
+    "created_by": null,
+    "title": "communication",
+    "slug": "communication",
+    "description": "hciwodujhscnsb dchshcnda cjsdhcskdjbc hsdbuicsd",
+    "difficulty": "beginner",
+    "is_published": false,
+    "is_active": false,
+    "created_at": "2026-02-25T15:55:26.951Z",
+    "updated_at": "2026-03-05T20:47:08.585Z"
+  }
+},
+{
+  "model": "courses.course",
+  "pk": 3,
+  "fields": {
+    "skill": null,
+    "created_by": null,
+    "title": "cumminication",
+    "slug": "cumminication",
+    "description": "jsxhgcb hdcgisudhv lkusybsbviwopb ibhd\njdushgdynsbisd hduhjvdsk\njouhsbbs\njchbsj",
+    "difficulty": "beginner",
+    "is_published": false,
+    "is_active": false,
+    "created_at": "2026-02-25T16:34:47.825Z",
+    "updated_at": "2026-02-26T16:29:19.671Z"
+  }
+},
+{
+  "model": "courses.course",
+  "pk": 4,
+  "fields": {
+    "skill": 3,
+    "created_by": null,
+    "title": "Diag Course",
+    "slug": "diag-course",
+    "description": "desc",
+    "difficulty": "beginner",
+    "is_published": false,
+    "is_active": false,
+    "created_at": "2026-02-25T16:36:10.971Z",
+    "updated_at": "2026-02-26T16:29:16.005Z"
+  }
+},
+{
+  "model": "courses.course",
+  "pk": 5,
+  "fields": {
+    "skill": 3,
+    "created_by": null,
+    "title": "Diag Course 2",
+    "slug": "diag-course-2",
+    "description": "desc",
+    "difficulty": "beginner",
+    "is_published": false,
+    "is_active": false,
+    "created_at": "2026-02-25T16:36:42.588Z",
+    "updated_at": "2026-02-26T16:29:13.372Z"
+  }
+},
+{
+  "model": "courses.course",
+  "pk": 6,
+  "fields": {
+    "skill": 3,
+    "created_by": null,
+    "title": "Diag Course 3",
+    "slug": "diag-course-3",
+    "description": "desc",
+    "difficulty": "beginner",
+    "is_published": false,
+    "is_active": false,
+    "created_at": "2026-02-25T16:37:23.518Z",
+    "updated_at": "2026-02-26T16:29:11.285Z"
+  }
+},
+{
+  "model": "courses.course",
+  "pk": 7,
+  "fields": {
+    "skill": 3,
+    "created_by": null,
+    "title": "Diag Course 4",
+    "slug": "diag-course-4",
+    "description": "desc",
+    "difficulty": "beginner",
+    "is_published": false,
+    "is_active": false,
+    "created_at": "2026-02-25T16:38:23.779Z",
+    "updated_at": "2026-02-26T16:29:08.622Z"
+  }
+},
+{
+  "model": "courses.course",
+  "pk": 8,
+  "fields": {
+    "skill": null,
+    "created_by": 5,
+    "title": "negotiation",
+    "slug": "negotiation",
+    "description": "jsasdbowqib dubjsibe b\njsudbhj kdejbdqbew",
+    "difficulty": "beginner",
+    "is_published": false,
+    "is_active": false,
+    "created_at": "2026-02-26T15:03:27.850Z",
+    "updated_at": "2026-02-26T16:29:04.605Z"
+  }
+},
+{
+  "model": "courses.course",
+  "pk": 9,
+  "fields": {
+    "skill": null,
+    "created_by": 5,
+    "title": "Effective Communication Skills",
+    "slug": "effective-communication-skills",
+    "description": "This course develops essential communication skills needed for academic, professional, and personal success. Learners will explore verbal and non-verbal communication, active listening, public speaking, and professional writing. The course focuses on practical techniques to help learners express ideas clearly, listen effectively, and communicate confidently in diverse environments.",
+    "difficulty": "beginner",
+    "is_published": false,
+    "is_active": false,
+    "created_at": "2026-02-26T16:35:57.916Z",
+    "updated_at": "2026-03-05T20:47:11.141Z"
+  }
+},
+{
+  "model": "courses.course",
+  "pk": 10,
+  "fields": {
+    "skill": null,
+    "created_by": 9,
+    "title": "leadership",
+    "slug": "leadership",
+    "description": "this course leadership is design to guide and help the students, employees, and professionals to develop the leadership and management skill",
+    "difficulty": "beginner",
+    "is_published": false,
+    "is_active": false,
+    "created_at": "2026-03-02T10:36:54.166Z",
+    "updated_at": "2026-03-05T20:47:17.187Z"
+  }
+},
+{
+  "model": "courses.course",
+  "pk": 11,
+  "fields": {
+    "skill": null,
+    "created_by": 5,
+    "title": "Communication",
+    "slug": "communication-1",
+    "description": "Communication is the ability to share information, ideas, and feelings effectively with others. Strong communication skills help individuals express themselves clearly, build relationships, resolve conflicts, and succeed in professional and social environments.\n\nLearning Outcomes:\nAfter completing this course, learners will be able to:\nUnderstand the fundamentals of communication\nPractice active listening\nCommunicate clearly in professional environments\nHandle misunderstandings and conflicts effectively",
+    "difficulty": "beginner",
+    "is_published": true,
+    "is_active": true,
+    "created_at": "2026-03-05T21:01:24.066Z",
+    "updated_at": "2026-03-05T21:01:24.066Z"
+  }
+},
+{
+  "model": "courses.course",
+  "pk": 12,
+  "fields": {
+    "skill": null,
+    "created_by": 5,
+    "title": "LEADERSHIP",
+    "slug": "leadership-1",
+    "description": "Leadership is the ability to guide, inspire, and influence others toward achieving a shared goal. Good leaders do not only give instructions; they motivate people, solve problems, and help teams succeed.\n\nLeadership is an important skill in workplaces, businesses, schools, and communities. Anyone can develop leadership skills through practice, self-awareness, and continuous learning.\nLearning Outcomes:\nAfter completing this course, learners will be able to:\n\nUnderstand the meaning and importance of leadership\nIdentify key leadership qualities\nLead and motivate a team effectively\nMake responsible decisions as a leader",
+    "difficulty": "beginner",
+    "is_published": true,
+    "is_active": true,
+    "created_at": "2026-03-23T11:23:32.135Z",
+    "updated_at": "2026-03-23T11:23:32.135Z"
+  }
+},
+{
+  "model": "courses.course",
+  "pk": 13,
+  "fields": {
+    "skill": null,
+    "created_by": 3,
+    "title": "EMOTIONAL INTELLIGENCE",
+    "slug": "emotional-intelligence",
+    "description": "Emotional Intelligence (EI) is the ability to understand, manage, and express emotions effectively while also recognizing and responding to the emotions of others. It plays a critical role in relationships, teamwork, leadership, and personal well-being.",
+    "difficulty": "beginner",
+    "is_published": true,
+    "is_active": true,
+    "created_at": "2026-03-23T12:26:45.899Z",
+    "updated_at": "2026-03-23T12:26:45.899Z"
+  }
+},
+{
+  "model": "courses.course",
+  "pk": 14,
+  "fields": {
+    "skill": null,
+    "created_by": 30,
+    "title": "Firgita J Analytics",
+    "slug": "firgita-j",
+    "description": "This is a Firgita J Analytics professional certificate by BrightSill Team",
+    "difficulty": "beginner",
+    "is_published": true,
+    "is_active": true,
+    "created_at": "2026-03-26T12:36:18.084Z",
+    "updated_at": "2026-03-26T13:13:11.682Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 1,
+  "fields": {
+    "course": 7,
+    "title": "Module A",
+    "description": "desc",
+    "content": "Read this",
+    "youtube_url": "",
+    "youtube_video_id": "",
+    "order_index": 1,
+    "is_preview": false,
+    "created_at": "2026-02-25T16:38:27.096Z",
+    "updated_at": "2026-02-25T16:38:27.096Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 2,
+  "fields": {
+    "course": 2,
+    "title": "sdcsdad",
+    "description": "dcdsdcvsd",
+    "content": "sdfsfsvfsvsf",
+    "youtube_url": "https://youtu.be/hJegA740NEo?si=dZK6iMKvYgMIf2i9",
+    "youtube_video_id": "hJegA740NEo",
+    "order_index": 2,
+    "is_preview": true,
+    "created_at": "2026-02-25T16:41:12.572Z",
+    "updated_at": "2026-02-25T16:41:12.572Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 3,
+  "fields": {
+    "course": 9,
+    "title": "Module 1: Foundations of Communication",
+    "description": "Understanding what communication is, its types, elements, and common barriers.",
+    "content": "",
+    "youtube_url": "https://youtu.be/RfuhJQhPb-4?si=bgwL6K3tINWGr8QL",
+    "youtube_video_id": "RfuhJQhPb-4",
+    "order_index": 1,
+    "is_preview": true,
+    "created_at": "2026-02-26T16:40:23.505Z",
+    "updated_at": "2026-02-26T16:40:23.505Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 4,
+  "fields": {
+    "course": 9,
+    "title": "Module 2: Verbal & Non-Verbal Communication",
+    "description": "How tone, body language, facial expressions, and word choice affect messages.",
+    "content": "",
+    "youtube_url": "https://youtu.be/RfuhJQhPb-4?si=EMIYdO4XFL5fzKsw",
+    "youtube_video_id": "RfuhJQhPb-4",
+    "order_index": 2,
+    "is_preview": true,
+    "created_at": "2026-02-26T16:41:10.668Z",
+    "updated_at": "2026-02-26T16:41:10.668Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 5,
+  "fields": {
+    "course": 9,
+    "title": "Module 3: Active Listening Skills",
+    "description": "Techniques for attentive listening, feedback, and avoiding misunderstandings.",
+    "content": "",
+    "youtube_url": "https://youtu.be/lRNHaFAZqhc?si=_C-gRJErmJMDiKYj",
+    "youtube_video_id": "lRNHaFAZqhc",
+    "order_index": 3,
+    "is_preview": true,
+    "created_at": "2026-02-26T16:41:54.883Z",
+    "updated_at": "2026-02-26T16:41:54.883Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 6,
+  "fields": {
+    "course": 9,
+    "title": "Module 4: Public Speaking & Presentation",
+    "description": "Building confidence, organizing ideas, and delivering clear presentations.",
+    "content": "",
+    "youtube_url": "https://youtu.be/7XB7-j_A0ak?si=--MM7iLK8vlkSVlJ",
+    "youtube_video_id": "7XB7-j_A0ak",
+    "order_index": 4,
+    "is_preview": true,
+    "created_at": "2026-02-26T16:42:51.096Z",
+    "updated_at": "2026-02-26T16:42:51.096Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 7,
+  "fields": {
+    "course": 9,
+    "title": "Module 5: Professional Writing",
+    "description": "Writing effective emails, messages, and formal communication in the workplace.",
+    "content": "",
+    "youtube_url": "https://youtu.be/oJfcZIdfitA?si=sz5JVg68Y2n9pPhM",
+    "youtube_video_id": "oJfcZIdfitA",
+    "order_index": 5,
+    "is_preview": true,
+    "created_at": "2026-02-26T16:45:02.922Z",
+    "updated_at": "2026-02-26T16:45:02.922Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 8,
+  "fields": {
+    "course": 9,
+    "title": "Module 6: Cross-Cultural Communication",
+    "description": "Communicating respectfully and effectively across different languages and cultures (including Hausa and English contexts).",
+    "content": "",
+    "youtube_url": "https://youtu.be/oJfcZIdfitA?si=NqbsZhixbbkJHmMn",
+    "youtube_video_id": "oJfcZIdfitA",
+    "order_index": 6,
+    "is_preview": true,
+    "created_at": "2026-02-26T16:45:49.343Z",
+    "updated_at": "2026-02-26T16:45:49.343Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 10,
+  "fields": {
+    "course": 10,
+    "title": "Module 1: Foundations of Leadership",
+    "description": "",
+    "content": "1.0 Module Overview\n\nThis module introduces the fundamental concepts of leadership. It explores what leadership means, why it matters, how it differs from management, and the foundational theories that explain how leadership works. By the end of this module, learners should understand the core principles that shape effective leadership and begin reflecting on their own leadership potential.\n\n1.1 Learning Objectives\n\nAt the end of this module, learners should be able to:\n\nDefine leadership clearly\n\nDistinguish between leadership and management\n\nExplain major leadership theories\n\nIdentify essential leadership qualities\n\nRecognize the importance of ethical leadership\n\n1.2 Meaning and Nature of Leadership\n\nLeadership is the ability to influence and guide individuals or groups toward achieving shared goals. It involves vision, inspiration, responsibility, and service. Leadership is not limited to authority or formal positions. It is demonstrated through actions, character, and the ability to motivate others.\n\nLeadership involves:\n\nSetting direction\n\nInspiring commitment\n\nBuilding relationships\n\nMaking responsible decisions\n\nEncouraging growth in others\n\nLeadership exists in businesses, educational institutions, communities, religious organizations, and families.\n\n1.3 Leadership vs. Management\n\nAlthough related, leadership and management are not the same.\n\nLeadership\tManagement\nFocuses on vision and direction\tFocuses on planning and organization\nInspires and motivates people\tControls and coordinates tasks\nEncourages innovation and change\tMaintains stability\nInfluences through trust\tOperates through authority\n\nEffective organizations require both leadership and management working together.\n\n1.4 Major Leadership Theories\n1. Trait Theory\n\nSuggests that leaders possess natural qualities such as confidence, intelligence, and determination.\n\n2. Behavioral Theory\n\nFocuses on what leaders do rather than who they are. Leadership behaviors can be learned.\n\n3. Situational Leadership\n\nStates that no single style works best. Leaders must adapt their style based on the situation and the readiness of followers.\n\n4. Transformational Leadership\n\nEmphasizes inspiring followers to exceed expectations and embrace positive change.\n\nThese theories show that leadership is dynamic and can be developed.\n\n1.5 Core Qualities of Effective Leaders\n\nEffective leaders often demonstrate:\n\nIntegrity\n\nEmotional intelligence\n\nCommunication skills\n\nAccountability\n\nVision\n\nEmpathy\n\nDecisiveness\n\nConfidence\n\nLeadership begins with self-leadership — the ability to discipline oneself and act consistently.\n\n1.6 Ethical Leadership\n\nEthical leadership involves fairness, transparency, and moral responsibility. Leaders must consider the long-term impact of their decisions. Ethical leaders build trust and credibility.\n\nKey aspects of ethical leadership include:\n\nHonesty\n\nRespect\n\nJustice\n\nResponsibility\n\nAccountability\n\n1.7 Module Summary\n\nLeadership is influence driven by vision, integrity, and responsibility. It is not limited to titles but is demonstrated through character and action. Understanding leadership foundations prepares learners for deeper study of leadership styles and practices.",
+    "youtube_url": "",
+    "youtube_video_id": "",
+    "order_index": 1,
+    "is_preview": true,
+    "created_at": "2026-03-03T08:24:52.296Z",
+    "updated_at": "2026-03-03T08:24:52.298Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 11,
+  "fields": {
+    "course": 10,
+    "title": "Module 2: Leadership Styles and Approaches",
+    "description": "",
+    "content": "2.0 Module Overview\n\nThis module examines different leadership styles and practical approaches leaders use to guide teams and organizations. Understanding leadership styles helps leaders adapt their behavior to fit situations, improve team performance, and create a positive work environment.\n\nLeadership effectiveness often depends not just on what a leader knows, but how they apply their leadership style in real situations.\n\n2.1 Learning Objectives\n\nBy the end of this module, learners should be able to:\n\nIdentify major leadership styles\n\nCompare the strengths and weaknesses of each style\n\nDetermine when to apply different leadership approaches\n\nRecognize their personal leadership tendencies\n\n2.2 Major Leadership Styles\n1. Autocratic Leadership\n\nAutocratic leaders make decisions independently with little or no input from team members. Authority is centralized.\n\nCharacteristics:\n\nClear direction\n\nQuick decision-making\n\nStrict supervision\n\nAdvantages:\n\nEffective in emergencies\n\nUseful when quick decisions are needed\n\nDisadvantages:\n\nCan reduce team morale\n\nLimits creativity\n\n2. Democratic Leadership\n\nDemocratic leaders involve team members in decision-making. While the leader makes the final decision, input from others is encouraged.\n\nCharacteristics:\n\nParticipation\n\nOpen communication\n\nCollaboration\n\nAdvantages:\n\nIncreases employee engagement\n\nEncourages innovation\n\nDisadvantages:\n\nSlower decision-making\n\nMay create conflict if opinions differ widely\n\n3. Laissez-Faire Leadership\n\nThis style allows team members to make decisions with minimal supervision. The leader provides guidance but avoids micromanagement.\n\nCharacteristics:\n\nHigh autonomy\n\nTrust-based leadership\n\nLimited interference\n\nAdvantages:\n\nEncourages independence\n\nWorks well with skilled teams\n\nDisadvantages:\n\nMay lead to lack of direction\n\nRisk of low accountability\n\n4. Transformational Leadership\n\nTransformational leaders inspire and motivate followers toward significant change and improvement.\n\nCharacteristics:\n\nStrong vision\n\nMotivational communication\n\nFocus on growth\n\nAdvantages:\n\nDrives innovation\n\nBuilds strong commitment\n\nDisadvantages:\n\nCan be demanding\n\nRequires high emotional intelligence\n\n5. Transactional Leadership\n\nTransactional leaders focus on structure, rewards, and penalties. Performance is monitored and rewarded accordingly.\n\nCharacteristics:\n\nClear rules\n\nPerformance-based rewards\n\nStructured environment\n\nAdvantages:\n\nEffective for routine tasks\n\nProvides clarity\n\nDisadvantages:\n\nMay limit creativity\n\nFocuses on short-term results\n\n2.3 Choosing the Right Leadership Style\n\nNo single leadership style is best for every situation. Effective leaders consider:\n\nTeam skill level\n\nOrganizational culture\n\nUrgency of the situation\n\nNature of the task\n\nLevel of trust within the team\n\nFor example:\n\nIn a crisis → Autocratic may be appropriate.\n\nIn creative projects → Democratic or Transformational works better.\n\nWith experienced professionals → Laissez-faire may be effective.\n\nLeadership flexibility is a critical skill.\n\n2.4 Developing Your Leadership Style\n\nTo improve leadership effectiveness:\n\nAssess your strengths and weaknesses\n\nSeek feedback from others\n\nObserve successful leaders\n\nPractice adaptability\n\nInvest in emotional intelligence\n\nLeaders who understand their natural tendencies can learn to adjust their style when necessary.\n\n2.5 Module Summary\n\nLeadership styles influence team performance and organizational success. Autocratic, democratic, laissez-faire, transformational, and transactional styles each have advantages and limitations. Effective leadership requires flexibility and the ability to apply the appropriate style in different situations.",
+    "youtube_url": "",
+    "youtube_video_id": "",
+    "order_index": 2,
+    "is_preview": true,
+    "created_at": "2026-03-03T08:32:24.839Z",
+    "updated_at": "2026-03-03T08:32:24.839Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 12,
+  "fields": {
+    "course": 10,
+    "title": "Module 3: Communication, Emotional Intelligence, and Team Leadership",
+    "description": "",
+    "content": "3.0 Module Overview\n\nEffective leadership depends heavily on strong communication skills, emotional intelligence, and the ability to manage teams productively. Leaders do not succeed alone; they succeed through people. This module explores how leaders communicate clearly, manage emotions, build trust, and create high-performing teams.\n\n3.1 Learning Objectives\n\nBy the end of this module, learners should be able to:\n\nUnderstand the role of communication in leadership\n\nExplain the concept of emotional intelligence\n\nIdentify barriers to effective communication\n\nApply strategies for managing and motivating teams\n\n3.2 Communication in Leadership\n\nCommunication is the process of sharing information, ideas, and feelings in a clear and meaningful way. For leaders, communication is not just about speaking—it also involves listening, understanding, and responding effectively.\n\nTypes of Communication\n\nVerbal Communication – Spoken words during meetings, presentations, or discussions.\n\nNon-verbal Communication – Body language, facial expressions, tone of voice.\n\nWritten Communication – Emails, reports, memos, and official documents.\n\nEffective leaders ensure clarity, consistency, and transparency in their communication.\n\n3.3 Barriers to Effective Communication\n\nCommon barriers include:\n\nPoor listening skills\n\nEmotional reactions\n\nCultural differences\n\nAssumptions and misunderstandings\n\nLack of clarity\n\nLeaders must actively remove these barriers by encouraging open dialogue and practicing active listening.\n\n3.4 Emotional Intelligence (EI)\n\nEmotional Intelligence is the ability to recognize, understand, and manage your emotions while also recognizing and influencing the emotions of others.\n\nKey Components of Emotional Intelligence\n\nSelf-awareness – Understanding your emotions and their impact.\n\nSelf-regulation – Controlling impulses and maintaining professionalism.\n\nMotivation – Staying driven toward goals.\n\nEmpathy – Understanding others’ feelings.\n\nSocial Skills – Building relationships and resolving conflicts.\n\nLeaders with high emotional intelligence build stronger teams and handle pressure more effectively.\n\n3.5 Team Leadership and Collaboration\n\nA team is a group of individuals working toward a shared goal. Effective leaders build teams based on trust, clear roles, and shared accountability.\n\nCharacteristics of High-Performing Teams\n\nClear objectives\n\nDefined roles\n\nMutual respect\n\nOpen communication\n\nAccountability\n\nLeaders must:\n\nDelegate tasks appropriately\n\nEncourage participation\n\nManage conflicts fairly\n\nRecognize achievements\n\n3.6 Conflict Management\n\nConflict is unavoidable in teams. Effective leaders do not ignore conflict—they address it constructively.\n\nStrategies include:\n\nListening to all parties\n\nIdentifying the root cause\n\nEncouraging respectful dialogue\n\nSeeking win-win solutions\n\nProper conflict management strengthens relationships rather than damaging them.\n\n3.7 Module Summary\n\nStrong leadership requires effective communication, emotional intelligence, and team management skills. Leaders who listen actively, manage emotions wisely, and foster collaboration create productive and motivated teams. Communication and emotional intelligence are essential tools for long-term leadership success.",
+    "youtube_url": "",
+    "youtube_video_id": "",
+    "order_index": 3,
+    "is_preview": true,
+    "created_at": "2026-03-03T08:34:20.734Z",
+    "updated_at": "2026-03-03T08:34:20.734Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 13,
+  "fields": {
+    "course": 11,
+    "title": "Introduction to Communication",
+    "description": "this is an introduction to communication, where a user can understand the concept of communication and the power of good communication.",
+    "content": "Before the commencement of this module; let start by asking what is communication? (take a few seconds to answer this to yourself).\nhave you done?, let start!\n\nCommunication is the process of exchanging information, thoughts, and emotions between individuals. It is one of the most important soft skills required in workplaces, schools, and everyday life.\n\nCommunication does not only involve speaking. It includes listening, observing body language, writing messages, and responding appropriately. Effective communication ensures that the message sent by one person is understood correctly by another.\n\nThere are four main types of communication:\n\n1. Verbal Communication\nThis involves speaking directly with others through conversations, meetings, or presentations.\n\n2. Non-Verbal Communication\nThis includes body language, facial expressions, gestures, and eye contact.\n\n3. Written Communication\nThis includes emails, reports, messages, and other written forms of interaction.\n\n4. Visual Communication\nThis involves the use of charts, graphs, and images to communicate information.\n\nGood communication helps build trust, improve teamwork, and prevent misunderstandings.\n\nModule hint:\nCommunication is not just about speaking; it is about ensuring that the message is clearly understood by others.",
+    "youtube_url": "",
+    "youtube_video_id": "",
+    "order_index": 1,
+    "is_preview": true,
+    "created_at": "2026-03-05T21:06:19.547Z",
+    "updated_at": "2026-03-05T21:06:19.547Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 14,
+  "fields": {
+    "course": 11,
+    "title": "Active Listening",
+    "description": "This is second module from the communication skill course.",
+    "content": "",
+    "youtube_url": "https://youtu.be/oqzDzeiBzic",
+    "youtube_video_id": "oqzDzeiBzic",
+    "order_index": 2,
+    "is_preview": true,
+    "created_at": "2026-03-22T14:46:08.792Z",
+    "updated_at": "2026-03-22T14:46:08.793Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 15,
+  "fields": {
+    "course": 11,
+    "title": "Effective Workplace Communication",
+    "description": "This is module 3 from communication skill course.",
+    "content": "Reading Content\nCommunication in professional environments requires clarity, respect, and professionalism.\nIn workplaces, communication occurs in many forms such as meetings, emails, presentations, and teamwork discussions.\nTo communicate effectively at work, individuals should follow these principles:\n1. Be Clear and Concise\nAvoid unnecessary words. Deliver your message in a simple and understandable way.\n2. Be Respectful\nUse polite language and consider other people's perspectives.\n3. Choose the Right Communication Channel\nSome messages are better communicated through meetings, while others may be suitable for emails.\n4. Think Before You Speak\nOrganize your thoughts before responding to ensure your message is meaningful and constructive.\nProfessionals who communicate effectively are more likely to succeed because they can collaborate with others and avoid conflicts.",
+    "youtube_url": "",
+    "youtube_video_id": "",
+    "order_index": 3,
+    "is_preview": true,
+    "created_at": "2026-03-22T14:53:50.253Z",
+    "updated_at": "2026-03-22T14:53:50.253Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 16,
+  "fields": {
+    "course": 12,
+    "title": "Introduction to Leadership",
+    "description": "First module of the leadership course",
+    "content": "Leadership is the ability to influence and guide individuals or groups toward achieving a common goal. Leaders help teams stay focused, motivated, and organized.\n\nMany people believe that leadership is only for managers or executives. However, leadership can be demonstrated by anyone who takes responsibility, supports others, and contributes positively to a group.\n\nGood leadership helps organizations grow and succeed. It also helps teams work together effectively.\n\nSome common leadership responsibilities include:\n\nSetting clear goals\nMotivating team members\nMaking decisions\nSolving problems\nSupporting others\n\nLeadership is not about controlling people. It is about helping others perform their best.\n\nKey point:\n\nLeadership is about guiding and inspiring people to achieve a shared objective.",
+    "youtube_url": "",
+    "youtube_video_id": "",
+    "order_index": 1,
+    "is_preview": true,
+    "created_at": "2026-03-23T11:24:46.601Z",
+    "updated_at": "2026-03-23T11:24:46.601Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 17,
+  "fields": {
+    "course": 12,
+    "title": "Qualities of a Good Leader",
+    "description": "Second module from Leadership course",
+    "content": "",
+    "youtube_url": "https://youtu.be/7_W7HRa6FMA",
+    "youtube_video_id": "7_W7HRa6FMA",
+    "order_index": 2,
+    "is_preview": true,
+    "created_at": "2026-03-23T11:29:09.321Z",
+    "updated_at": "2026-03-23T11:29:09.321Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 18,
+  "fields": {
+    "course": 12,
+    "title": "Team Leadership and Motivation",
+    "description": "Third module from leadership course",
+    "content": "Leading a team requires more than giving instructions. It involves motivating individuals and encouraging cooperation among team members.\n\nA motivated team performs better, solves problems faster, and achieves goals more effectively.\n\nLeaders can motivate teams in several ways.\n\n1. Recognizing achievements\nAcknowledging people's efforts increases motivation and confidence.\n\n2. Encouraging participation\nAllowing team members to contribute ideas makes them feel valued.\n\n3. Providing clear direction\nTeams work better when they clearly understand their tasks and responsibilities.\n\n4. Supporting team members\nLeaders should provide help and guidance when challenges arise.\n\nWhen leaders support their teams, members feel respected and become more productive.",
+    "youtube_url": "",
+    "youtube_video_id": "",
+    "order_index": 3,
+    "is_preview": true,
+    "created_at": "2026-03-23T11:30:45.294Z",
+    "updated_at": "2026-03-23T11:30:45.294Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 19,
+  "fields": {
+    "course": 13,
+    "title": "Understanding Emotional Intelligence",
+    "description": "First module from Emotional Intelligence course",
+    "content": "Emotional intelligence refers to the ability to recognize, understand, and manage emotions in ourselves and others.\n\nPeople with strong emotional intelligence can control their reactions, communicate effectively, and maintain healthy relationships.\n\nEmotional intelligence consists of four main components:\n\n1. Self-Awareness\nThe ability to recognize your own emotions and understand how they affect your thoughts and behavior.\n\n2. Self-Management\nThe ability to control emotional reactions and respond calmly in stressful situations.\n\n3. Social Awareness\nThe ability to understand the feelings and perspectives of others.\n\n4. Relationship Management\nThe ability to communicate clearly, resolve conflicts, and maintain positive relationships.\n\nDeveloping emotional intelligence helps individuals improve teamwork, leadership, and communication.\n\nKey point:\n\nEmotional intelligence allows individuals to manage emotions and interact with others in a positive and constructive way.",
+    "youtube_url": "",
+    "youtube_video_id": "",
+    "order_index": 1,
+    "is_preview": true,
+    "created_at": "2026-03-23T12:42:01.217Z",
+    "updated_at": "2026-03-23T12:42:01.217Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 20,
+  "fields": {
+    "course": 13,
+    "title": "Managing Emotions and Empathy",
+    "description": "Second module from Emotional Intelligence course",
+    "content": "Hello and welcome.\n\nIn this lesson, we will learn how to manage emotions and develop empathy.\n\nEveryone experiences emotions such as happiness, anger, frustration, and excitement. However, emotionally intelligent individuals learn how to respond to these emotions appropriately.\n\nOne important strategy is pause and think before reacting. When emotions become strong, taking a moment to calm down helps prevent negative reactions.\n\nAnother important skill is empathy. Empathy means understanding how another person feels and considering their perspective.\n\nFor example, if a colleague is upset about a mistake, responding with patience and understanding helps build trust.\n\nPracticing emotional control and empathy improves relationships and teamwork.\n\nRemember, emotional intelligence helps people communicate better and handle challenges effectively.\n\nThank you.",
+    "youtube_url": "",
+    "youtube_video_id": "",
+    "order_index": 2,
+    "is_preview": true,
+    "created_at": "2026-03-23T12:48:08.793Z",
+    "updated_at": "2026-03-23T12:48:08.793Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 21,
+  "fields": {
+    "course": 14,
+    "title": "hqwhb",
+    "description": "asnhbjhsa",
+    "content": "hgsvjgvasvasb",
+    "youtube_url": "",
+    "youtube_video_id": "",
+    "order_index": 1,
+    "is_preview": true,
+    "created_at": "2026-03-26T12:36:37.818Z",
+    "updated_at": "2026-03-26T12:36:37.818Z"
+  }
+}
+]

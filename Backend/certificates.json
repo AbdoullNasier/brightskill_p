@@ -1,0 +1,92 @@
+[
+{
+  "model": "certificates.certificate",
+  "pk": 1,
+  "fields": {
+    "user": 20,
+    "course": 11,
+    "issued_at": "2026-03-22T16:53:00.640Z",
+    "certificate_id": "BS-A3F9A78E"
+  }
+},
+{
+  "model": "certificates.certificate",
+  "pk": 2,
+  "fields": {
+    "user": 19,
+    "course": 13,
+    "issued_at": "2026-03-23T14:21:32.074Z",
+    "certificate_id": "BS-A9D78EDB"
+  }
+},
+{
+  "model": "certificates.certificate",
+  "pk": 3,
+  "fields": {
+    "user": 19,
+    "course": 12,
+    "issued_at": "2026-03-23T14:21:32.089Z",
+    "certificate_id": "BS-1958455A"
+  }
+},
+{
+  "model": "certificates.certificate",
+  "pk": 4,
+  "fields": {
+    "user": 24,
+    "course": 13,
+    "issued_at": "2026-03-24T12:27:18.271Z",
+    "certificate_id": "BS-9167F34F"
+  }
+},
+{
+  "model": "certificates.certificate",
+  "pk": 5,
+  "fields": {
+    "user": 26,
+    "course": 11,
+    "issued_at": "2026-03-24T14:08:23.387Z",
+    "certificate_id": "BS-AFA80558"
+  }
+},
+{
+  "model": "certificates.certificate",
+  "pk": 6,
+  "fields": {
+    "user": 28,
+    "course": 11,
+    "issued_at": "2026-03-25T12:46:25.326Z",
+    "certificate_id": "BS-ECD8018B"
+  }
+},
+{
+  "model": "certificates.certificate",
+  "pk": 7,
+  "fields": {
+    "user": 30,
+    "course": 11,
+    "issued_at": "2026-03-26T12:28:34.393Z",
+    "certificate_id": "BS-89E793EA"
+  }
+},
+{
+  "model": "certificates.certificate",
+  "pk": 8,
+  "fields": {
+    "user": 24,
+    "course": 14,
+    "issued_at": "2026-03-26T12:57:45.159Z",
+    "certificate_id": "BS-4DE5098F"
+  }
+},
+{
+  "model": "certificates.certificate",
+  "pk": 9,
+  "fields": {
+    "user": 31,
+    "course": 14,
+    "issued_at": "2026-03-26T13:13:45.538Z",
+    "certificate_id": "BS-B97BAC58"
+  }
+}
+]
